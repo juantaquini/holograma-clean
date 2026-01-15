@@ -130,7 +130,7 @@ export function MediaSection({
         type="file"
         multiple
         accept={acceptAttr}
-        capture={kind === "audio" ? ("microphone" as any) : undefined} // ✅ cast a any
+       // capture={kind === "audio" ? ("microphone" as any) : undefined} // ✅ cast a any
         className={styles["hidden-input"]}
         onChange={(e) => addFiles(e.target.files)}
       />
