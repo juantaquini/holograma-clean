@@ -73,6 +73,12 @@ const DynamicPad: React.FC<Props> = ({
       v.hide();
       v.volume(0);
       v.elt.muted = true;
+      v.elt.playsInline = true;
+      v.elt.setAttribute('playsinline', '');
+      v.elt.setAttribute('webkit-playsinline', '');
+      v.elt.setAttribute('disablePictureInPicture', '');
+      v.elt.setAttribute('x-webkit-airplay', 'deny');
+      v.elt.style.pointerEvents = 'none';
       v.loop();
       vids.current[i] = v;
     });
@@ -330,6 +336,10 @@ const DynamicPad: React.FC<Props> = ({
           touch-action: none !important;
           display: block;
           outline: none;
+        }
+        
+        video {
+          pointer-events: none !important;
         }
       `}</style>
       <Sketch preload={preload} setup={setup} draw={draw} />

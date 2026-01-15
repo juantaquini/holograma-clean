@@ -157,16 +157,22 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
                   muted
                   loop
                   playsInline
+                  webkit-playsinline=""
+                  x-webkit-airplay="deny"
+                  disablePictureInPicture
+                  controlsList="nodownload nofullscreen noremoteplayback"
+                  style={{ pointerEvents: 'none' }}
+                  onContextMenu={(e) => e.preventDefault()}
                 />
               )}
             </div>
-                          {article.audios.length > 0 && (
-                <DynamicPad
-                  audios={article.audios}
-                  images={article.images}
-                  videos={article.videos}
-                />
-              )}
+            {article.audios.length > 0 && (
+              <DynamicPad
+                audios={article.audios}
+                images={article.images}
+                videos={article.videos}
+              />
+            )}
           </div>
         </div>
       </Container>
