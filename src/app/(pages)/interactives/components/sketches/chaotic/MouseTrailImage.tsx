@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
-import particleImage from "@/assets/interactives/design/stars.png";
 
 const Sketch = dynamic(() => import("react-p5"), {
   ssr: false,
@@ -11,6 +10,8 @@ const Sketch = dynamic(() => import("react-p5"), {
 const MouseTrailImage: React.FC = () => {
   const [particles, setParticles] = useState<any[]>([]);
   const [particleImg, setParticleImg] = useState<any>(null);
+
+  const particleImage = "/assets/interactives/design/stars.png";
 
   let prevMouseX = 0;
   let prevMouseY = 0;
@@ -23,7 +24,7 @@ const MouseTrailImage: React.FC = () => {
     p5.angleMode(p5.DEGREES);
     p5.rectMode(p5.CENTER);
 
-    const img = p5.loadImage(particleImage.src, () => {
+    const img = p5.loadImage(particleImage, () => {
       setParticleImg(img);
     });
 

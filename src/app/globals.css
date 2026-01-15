@@ -28,6 +28,30 @@ html body {
   overflow: auto;
 }
 
+@font-face {
+  font-family: "Array";
+  src: url("/fonts/array/Array-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Array";
+  src: url("/fonts/array/Array-Semibold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Array";
+  src: url("/fonts/array/Array-BoldWide.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ===== Scrollbar (tomado del segundo archivo) ===== */
 
 *::-webkit-scrollbar {

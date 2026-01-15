@@ -31,7 +31,6 @@ const ArticleList = ({ filterUid }: ArticleListProps) => {
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [showMine, setShowMine] = useState(false);
 
   useEffect(() => {
@@ -51,36 +50,9 @@ const ArticleList = ({ filterUid }: ArticleListProps) => {
     fetchArticles();
   }, []);
 
-  useEffect(() => {
-    const checkRole = async () => {
-      if (!user?.uid) return;
-      try {
-        const res = await fetch(`/api/users/${user.uid}`, { cache: "no-store" });
-        if (!res.ok) return;
-        const data: UserData = await res.json();
-        console.log(data)
-        setIsAdmin(data.role === "admin");
-      } catch {
-        setIsAdmin(false);
-      }
-    };
-    checkRole();
-  }, [user]);
 
   if (isLoading) return <LoadingSketch />;
 
-  if (!articles.length) {
-    return (
-      <div className={styles["articles-main-layout"]}>
-        <p className={styles["articles-empty-message"]}>There are no articles yet.</p>
-        {isAdmin && (
-          <Link href="/articles/create" className={styles["articles-create-button"]}>
-            Create the first article
-          </Link>
-        )}
-      </div>
-    );
-  }
 
   const targetUid = filterUid ?? (showMine && user?.uid ? user.uid : undefined);
   const list = targetUid ? articles.filter(a => a.author_uid === targetUid) : articles;
@@ -98,14 +70,6 @@ const ArticleList = ({ filterUid }: ArticleListProps) => {
 
   return (
     <div className={styles["articles-main-layout"]}>
-      {/* ACTIONS */}
-      <div className={styles["articles-actions-row"]}>
-        {isAdmin && (
-          <Link href="/articles/create" className={styles["articles-create-button"]}>
-            Create new article
-          </Link>
-        )}
-      </div>
       {/* FEATURED */}
       <div className={styles["articles-featured-container"]}>
         <Link href={`/articles/${featured.id}`} className={styles["articles-featured-article"]}>

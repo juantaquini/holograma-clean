@@ -4,19 +4,19 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./InteractiveList.module.css";
-import calm from "@/assets/interactives/calm.jpeg";
-import calm2 from "@/assets/interactives/calm2.jpeg";
-import chaotic from "@/assets/interactives/chaotic.jpeg";
-import chaotic2 from "@/assets/interactives/chaotic2.png";
-import design from "@/assets/interactives/design.jpeg";
-import design2 from "@/assets/interactives/design2.jpeg";
-import dynamic from "@/assets/interactives/dynamic.jpeg";
-import dynamic2 from "@/assets/interactives/dynamic2.jpeg";
-import experimental from "@/assets/interactives/experimental.jpeg";
-import nature from "@/assets/interactives/nature.png";
-import psychedelic from "@/assets/interactives/psychedelic.jpeg";
 
 const InteractiveList = () => {
+  const calm = "/assets/interactives/calm.png";
+  const calm2 = "/assets/interactives/calm2.jpg";
+  const chaotic = "/assets/interactives/chaotic.jpg";
+  const chaotic2 = "/assets/interactives/chaotic2.png";
+  const design = "/assets/interactives/design.jpg";
+  const design2 = "/assets/interactives/design2.png";
+  const dynamic = "/assets/interactives/dynamic.jpg";
+  const experimental = "/assets/interactives/experimental.png";
+  const nature = "/assets/interactives/nature.png";
+  const psychedelic = "/assets/interactives/psychedelic.jpg";
+
   const [hoveredDescription, setHoveredDescription] = useState(
     "Geometric shapes, patterns, or structured art."
   );
@@ -108,9 +108,7 @@ const InteractiveList = () => {
         path: "rolling_interactive_spiral",
       },
     ],
-    DYNAMIC: [
-      { id: 7, src: dynamic, title: "PAD SKETCH", path: "pad" },
-    ],
+    DYNAMIC: [{ id: 7, src: dynamic, title: "PAD SKETCH", path: "pad" }],
   };
 
   useEffect(() => {
@@ -243,9 +241,10 @@ const InteractiveList = () => {
               style={{ top: sketch.y, left: sketch.x }}
             >
               <Image
-                className={`${styles["interactive-list-sketch-image"]} interactive-list-sketch-image`}
                 src={sketch.src}
                 alt={sketch.title}
+                fill
+                unoptimized
                 draggable={false}
               />
             </Link>

@@ -1,19 +1,8 @@
 import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary/cloudinary";
 import { supabase } from "@/lib/supabase/supabase-server";
-
+import { getMediaKind } from "@/lib/functions/getMediaKind";
 export const runtime = "nodejs";
-
-function getMediaKind(file: File, cloudinaryResourceType: string): "image" | "video" | "audio" {
-  const ext = file.name.split(".").pop()?.toLowerCase() || "";
-  const audioExts = ["mp3", "wav", "ogg", "m4a", "aac", "flac", "wma", "aiff"];
-  
-  if (audioExts.includes(ext)) {
-    return "audio";
-  }
-  
-  return cloudinaryResourceType === "image" ? "image" : "video";
-}
 
 export async function POST(req: Request) {
   const formData = await req.formData();

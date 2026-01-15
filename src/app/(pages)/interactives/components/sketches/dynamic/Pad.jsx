@@ -1,8 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import suziImg from "@/assets/interactives/pad/suzi.jpg";
-import harmImg from "@/assets/interactives/pad/harm.jpg";
-import goylImg from "@/assets/interactives/pad/goyl.jpg";
 
 const mediaPath = (name) => `/assets/interactives/pad/${name}`;
 
@@ -72,9 +69,9 @@ const Pad = (props) => {
     sound2 = p5.loadSound(mediaPath("chords.wav"));
     sound3 = p5.loadSound(mediaPath("synth.wav"));
     sound4 = p5.loadSound(mediaPath("particlesynth.wav"));
-    suzi = p5.loadImage(suziImg.src);
-    harm = p5.loadImage(harmImg.src);
-    goyl = p5.loadImage(goylImg.src);
+    suzi = p5.loadImage(mediaPath("suzi.jpg"));
+    harm = p5.loadImage(mediaPath("harm.jpg"));
+    goyl = p5.loadImage(mediaPath("goyl.jpg"));
   };
 
   const setup = (p5, canvasParentRef) => {
@@ -264,7 +261,7 @@ const Pad = (props) => {
   }
 
   return (
-    <div>
+    <div style={{ width: "100%", height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
       <span>
         Press and hold L to play all sounds together. Press K, B, S, H, R for
         individual sounds and visuals.

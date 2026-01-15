@@ -1,19 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/supabase-server";
-import cloudinary from "@/lib/cloudinary/cloudinary";
 
 export const runtime = "nodejs";
-
-function getMediaKind(fileName: string, cloudinaryResourceType: string): "image" | "video" | "audio" {
-  const ext = fileName.split(".").pop()?.toLowerCase() || "";
-  const audioExts = ["mp3", "wav", "ogg", "m4a", "aac", "flac", "wma", "aiff"];
-  
-  if (audioExts.includes(ext)) {
-    return "audio";
-  }
-  
-  return cloudinaryResourceType === "image" ? "image" : "video";
-}
 
 export async function GET(
   req: Request,
@@ -102,7 +90,6 @@ export async function PUT(
 
     const formData = await req.formData();
 
-    /* 1️⃣ Update article */
     const { error: articleError } = await supabase
       .from("article")
       .update({
@@ -114,7 +101,6 @@ export async function PUT(
 
     if (articleError) throw articleError;
 
-    /* 2️⃣ Remove deleted media */
     const removed = formData.getAll("removed_media_ids[]") as string[];
 
     if (removed.length > 0) {
@@ -127,7 +113,6 @@ export async function PUT(
       if (removeError) throw removeError;
     }
 
-    /* 3️⃣ Update positions of existing media */
     const positionsRaw = formData.getAll("media_positions[]") as string[];
 
     for (const item of positionsRaw) {
@@ -161,7 +146,6 @@ export async function PUT(
 
       if (linkError) throw linkError;
 
-      /* 5️⃣ Finalize media (change status from temp to ready) */
       const mediaIds = rows.map((r) => r.media_id);
 
       const { error: mediaUpdateError } = await supabase

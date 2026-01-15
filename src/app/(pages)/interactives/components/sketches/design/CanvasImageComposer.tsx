@@ -4,11 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import styles from "./CanvasImageComposer.module.css";
 import { SVGs } from "@/assets/SVGs";
-import horsePng from "@/assets/interactives/design/horse.png";
-import wwwwPng from "@/assets/interactives/design/wwwww.png";
-import feelPng from "@/assets/interactives/design/feel.png";
-import starsPng from "@/assets/interactives/design/stars.png";
-import dolphinesPng from "@/assets/interactives/design/dolphines.png";
+
 
 const Sketch = dynamic(() => import("react-p5"), {
   ssr: false,
@@ -276,11 +272,11 @@ const openFullscreenHelper = () => {
   }
 };
 
-const horseImage = horsePng.src;
-const image2 = wwwwPng.src;
-const image3 = feelPng.src;
-const image4 = starsPng.src;
-const image5 = dolphinesPng.src;
+const horsePng = "/assets/interactives/design/horse.png";
+const wwwwPng = "/assets/interactives/design/wwwww.png";
+const feelPng = "/assets/interactives/design/feel.png";
+const starsPng = "/assets/interactives/design/stars.png";
+const dolphinesPng = "/assets/interactives/design/dolphines.png";
 
 
 const CanvasImageComposer: React.FC = () => {
@@ -497,7 +493,7 @@ const CanvasImageComposer: React.FC = () => {
       <div className={styles["canvas-controls-desktop-row"]}>
         {!isMobile && (
           <div className={styles["image-items"]}>
-            {[horseImage, image2, image3, image4, image5].map((image) => (
+            {[horsePng, wwwwPng, feelPng, starsPng, dolphinesPng].map((image) => (
               <img
                 key={image}
                 src={image}
@@ -540,7 +536,7 @@ const CanvasImageComposer: React.FC = () => {
         <div className={styles["canvas-controls-mobile-column"]}>
           {isMobile && (
             <div className={styles["image-items"]}>
-              {[horseImage, image2, image3, image4, image5].map((image) => (
+              {[horsePng, wwwwPng, feelPng, starsPng, dolphinesPng].map((image) => (
                 <img
                   key={image}
                   src={image}
