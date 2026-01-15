@@ -15,7 +15,6 @@ const InteractiveList = () => {
   const dynamic = "/assets/interactives/dynamic.jpg";
   const experimental = "/assets/interactives/experimental.png";
   const nature = "/assets/interactives/nature.png";
-  const psychedelic = "/assets/interactives/psychedelic.jpg";
 
   const [hoveredDescription, setHoveredDescription] = useState(
     "Geometric shapes, patterns, or structured art."
@@ -43,7 +42,6 @@ const InteractiveList = () => {
 
   const sections = [
     { name: "CALM", description: "Soft colors, shapes and smooth motion." },
-    { name: "PSYCHEDELIC", description: "Color chaos and visual explosions." },
     { name: "CHAOTIC", description: "Unpredictable, harsh, glitchy visuals." },
     { name: "DESIGN", description: "Geometric patterns and structures." },
     { name: "NATURE", description: "Organic movement and earth textures." },
@@ -64,14 +62,6 @@ const InteractiveList = () => {
         src: calm2,
         title: "calm 2",
         path: "calm_second",
-      },
-    ],
-    PSYCHEDELIC: [
-      {
-        id: 3,
-        src: psychedelic,
-        title: "psy",
-        path: "alma",
       },
     ],
     CHAOTIC: [

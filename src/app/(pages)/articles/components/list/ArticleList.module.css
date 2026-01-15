@@ -5,7 +5,7 @@
   font-family: "IBM Plex Sans", sans-serif;
   color: var(--text-color);
   min-height: 100vh;
-  padding: 7vw 3vw 7vw 3vw;
+  padding: 10vw 3vw 7vw 3vw;
 }
 
 .articles-create-button {
@@ -71,7 +71,7 @@
 .articles-featured-artist {
   color: var(--text-color-secondary);
   font-style: italic;
-  font-size: 1.3rem;
+  font-size: 1rem;
   align-self: flex-start;
 }
 
@@ -205,7 +205,7 @@
 
 @media screen and (max-width: 768px) {
   .articles-featured-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 400;
     line-height: 1.1;
     margin: 0;

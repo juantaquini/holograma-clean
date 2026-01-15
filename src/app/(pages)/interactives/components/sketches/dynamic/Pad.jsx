@@ -39,9 +39,17 @@ let goylOffset = 0;
 
 let cubeRotation = 0;
 
+const KEYS = [66, 75, 83, 72]; // B K S H
+let activeTouches = new Map();
+
 const Pad = (props) => {
   const [Sketch, setSketch] = useState(null);
   const [p5SoundLoaded, setP5SoundLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/android|iphone|ipad/i.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -75,13 +83,153 @@ const Pad = (props) => {
   };
 
   const setup = (p5, canvasParentRef) => {
-    p5.createCanvas(1200, 500, p5.WEBGL).parent(canvasParentRef);
+    const canvas = p5.createCanvas(
+      isMobile ? p5.windowWidth : 1200,
+      isMobile ? p5.windowHeight * 0.75 : 500,
+      p5.WEBGL
+    ).parent(canvasParentRef);
+
+    if (isMobile) {
+      canvas.elt.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.elt.addEventListener('touchmove', handleTouchMove, { passive: false });
+      canvas.elt.addEventListener('touchend', handleTouchEnd, { passive: false });
+      canvas.elt.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    }
+  };
+
+  const isInsideCanvas = (touch, canvas) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX;
+    const y = touch.clientY;
+    
+    return (
+      x >= rect.left &&
+      x <= rect.right &&
+      y >= rect.top &&
+      y <= rect.bottom
+    );
+  };
+
+  const getQuadrantFromTouch = (touch, canvas) => {
+    if (!isInsideCanvas(touch, canvas)) return -1;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left - rect.width / 2;
+    const y = touch.clientY - rect.top - rect.height / 2;
+
+    if (x < 0 && y < 0) return 0; // top-left -> B
+    if (x >= 0 && y < 0) return 1; // top-right -> K
+    if (x < 0 && y >= 0) return 2; // bottom-left -> S
+    if (x >= 0 && y >= 0) return 3; // bottom-right -> H
+    return -1;
+  };
+
+  const toggleSound = (index, on) => {
+    if (index === 0) {
+      if (on && !isSoundOn) {
+        sound.loop();
+        isSoundOn = true;
+      } else if (!on && isSoundOn) {
+        sound.stop();
+        isSoundOn = false;
+      }
+    } else if (index === 1) {
+      if (on && !isSound1On) {
+        sound1.loop();
+        isSound1On = true;
+      } else if (!on && isSound1On) {
+        sound1.stop();
+        isSound1On = false;
+      }
+    } else if (index === 2) {
+      if (on && !isSound2On) {
+        sound2.loop();
+        isSound2On = true;
+      } else if (!on && isSound2On) {
+        sound2.stop();
+        isSound2On = false;
+      }
+    } else if (index === 3) {
+      if (on && !isSound3On) {
+        sound3.loop();
+        isSound3On = true;
+      } else if (!on && isSound3On) {
+        sound3.stop();
+        isSound3On = false;
+      }
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const canvas = e.target;
+
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i];
+      
+      if (!isInsideCanvas(touch, canvas)) continue;
+      
+      const quadrant = getQuadrantFromTouch(touch, canvas);
+      
+      if (quadrant !== -1) {
+        activeTouches.set(touch.identifier, quadrant);
+        toggleSound(quadrant, true);
+      }
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const canvas = e.target;
+
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i];
+      const oldQuadrant = activeTouches.get(touch.identifier);
+      
+      if (!isInsideCanvas(touch, canvas)) {
+        if (oldQuadrant !== undefined) {
+          toggleSound(oldQuadrant, false);
+          activeTouches.delete(touch.identifier);
+        }
+        continue;
+      }
+
+      const newQuadrant = getQuadrantFromTouch(touch, canvas);
+
+      if (oldQuadrant !== undefined && oldQuadrant !== newQuadrant) {
+        toggleSound(oldQuadrant, false);
+        activeTouches.delete(touch.identifier);
+
+        if (newQuadrant !== -1) {
+          activeTouches.set(touch.identifier, newQuadrant);
+          toggleSound(newQuadrant, true);
+        }
+      }
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i];
+      const quadrant = activeTouches.get(touch.identifier);
+
+      if (quadrant !== undefined) {
+        toggleSound(quadrant, false);
+        activeTouches.delete(touch.identifier);
+      }
+    }
   };
 
   const draw = (p5) => {
     p5.background(255, 0, 0);
 
-    if (p5.keyIsDown(76)) {
+    // Desktop: tecla L para todo
+    if (!isMobile && p5.keyIsDown(76)) {
       if (!areSoundsStarted) {
         sound.loop();
         sound1.loop();
@@ -109,12 +257,57 @@ const Pad = (props) => {
         areSoundsStarted = false;
       }
     }
+
+    // Desktop: teclas individuales
+    if (!isMobile) {
+      if (p5.keyIsDown(66)) {
+        if (!isSoundOn) {
+          sound.loop();
+          isSoundOn = true;
+        }
+      } else if (isSoundOn) {
+        sound.stop();
+        isSoundOn = false;
+      }
+
+      if (p5.keyIsDown(75)) {
+        if (!isSound1On) {
+          sound1.loop();
+          isSound1On = true;
+        }
+      } else if (isSound1On) {
+        sound1.stop();
+        isSound1On = false;
+      }
+
+      if (p5.keyIsDown(83)) {
+        if (!isSound2On) {
+          sound2.loop();
+          isSound2On = true;
+        }
+      } else if (isSound2On) {
+        sound2.stop();
+        isSound2On = false;
+      }
+
+      if (p5.keyIsDown(72)) {
+        if (!isSound3On) {
+          sound3.loop();
+          isSound3On = true;
+        }
+      } else if (isSound3On) {
+        sound3.stop();
+        isSound3On = false;
+      }
+    }
+
+    // Visuales: suzi (B / cuadrante 0)
     if (isSoundOn && sound.isPlaying()) {
       p5.push();
       const scaleValue = p5.sin(suziAngle);
       suziSize = p5.map(scaleValue, -1, 1, 50, 900);
       suziAngle += 0.5;
-      p5.translate(p5.width / -+50, p5.height / 24, -700);
+      p5.translate(p5.width / -50, p5.height / 24, -700);
       p5.image(
         suzi,
         -suziSize / 2,
@@ -125,14 +318,7 @@ const Pad = (props) => {
       p5.pop();
     }
 
-    if (p5.keyIsDown(66) && !isSoundOn) {
-      sound.loop();
-      isSoundOn = true;
-    } else if (!p5.keyIsDown(66) && isSoundOn) {
-      sound.stop();
-      isSoundOn = false;
-    }
-
+    // Visuales: harm (K / cuadrante 1)
     if (isSound1On && sound1.isPlaying()) {
       p5.push();
       const scaleValue = p5.sin(harmAngle);
@@ -151,14 +337,7 @@ const Pad = (props) => {
       p5.pop();
     }
 
-    if (p5.keyIsDown(75) && !isSound1On) {
-      sound1.loop();
-      isSound1On = true;
-    } else if (!p5.keyIsDown(75) && isSound1On) {
-      sound1.stop();
-      isSound1On = false;
-    }
-
+    // Visuales: goyl (S / cuadrante 2)
     if (isSound2On && sound2.isPlaying()) {
       p5.push();
       const scaleValue = p5.sin(goylAngle);
@@ -175,30 +354,15 @@ const Pad = (props) => {
       p5.pop();
     }
 
-    if (p5.keyIsDown(83) && !isSound2On) {
-      sound2.loop();
-      isSound2On = true;
-    } else if (!p5.keyIsDown(83) && isSound2On) {
-      sound2.stop();
-      isSound2On = false;
-    }
-
-    if (p5.keyIsDown(72) && !isSound3On) {
-      sound3.loop();
-      isSound3On = true;
-    } else if (!p5.keyIsDown(72) && isSound3On) {
-      sound3.stop();
-      isSound3On = false;
-    }
-
-    if (p5.keyIsDown(72) && !isHKeyPressed) {
+    // Círculo para H (cuadrante 3)
+    if (!isMobile && p5.keyIsDown(72) && !isHKeyPressed) {
       isHKeyPressed = true;
       circleRadius = initialCircleRadius;
-    } else if (!p5.keyIsDown(72) && isHKeyPressed) {
+    } else if (!isMobile && !p5.keyIsDown(72) && isHKeyPressed) {
       isHKeyPressed = false;
     }
 
-    if (isHKeyPressed) {
+    if (isHKeyPressed || (isMobile && isSound3On)) {
       p5.fill(350, 4, 309);
       const centerX = p5.width / -60;
       const centerY = p5.height / 60;
@@ -219,40 +383,58 @@ const Pad = (props) => {
       }
     }
 
-    if (p5.keyIsDown(82) && !isSound4On) {
-      sound4.loop();
-      isSound4On = true;
-    } else if (!p5.keyIsDown(82) && isSound4On) {
-      sound4.stop();
-      isSound4On = false;
-      stars = [];
-    }
-
-    for (let i = 0; i < stars.length; i++) {
-      drawStar(p5, stars[i].x, stars[i].y, stars[i].radius);
-    }
-
-    if (p5.keyIsPressed && p5.keyIsDown(82)) {
-      stars.push({
-        x: p5.random(-p5.width / 2, p5.width / 2),
-        y: p5.random(-p5.height / 2, p5.height / 2),
-        radius: 5,
-        growing: true,
-      });
+    // R key - estrellas (desktop only)
+    if (!isMobile) {
+      if (p5.keyIsDown(82) && !isSound4On) {
+        sound4.loop();
+        isSound4On = true;
+      } else if (!p5.keyIsDown(82) && isSound4On) {
+        sound4.stop();
+        isSound4On = false;
+        stars = [];
+      }
 
       for (let i = 0; i < stars.length; i++) {
-        if (stars[i].growing) {
-          stars[i].radius += 2;
-          if (stars[i].radius > 30) {
-            stars[i].growing = false;
-          }
-        } else {
-          stars[i].radius -= 1;
-          if (stars[i].radius < 5) {
-            stars[i].growing = true;
+        drawStar(p5, stars[i].x, stars[i].y, stars[i].radius);
+      }
+
+      if (p5.keyIsPressed && p5.keyIsDown(82)) {
+        stars.push({
+          x: p5.random(-p5.width / 2, p5.width / 2),
+          y: p5.random(-p5.height / 2, p5.height / 2),
+          radius: 5,
+          growing: true,
+        });
+
+        for (let i = 0; i < stars.length; i++) {
+          if (stars[i].growing) {
+            stars[i].radius += 2;
+            if (stars[i].radius > 30) {
+              stars[i].growing = false;
+            }
+          } else {
+            stars[i].radius -= 1;
+            if (stars[i].radius < 5) {
+              stars[i].growing = true;
+            }
           }
         }
       }
+    }
+
+    // Cruz divisoria en mobile
+    if (isMobile) {
+      p5.push();
+      p5.stroke(255, 255, 255);
+      p5.strokeWeight(2);
+      
+      // Línea vertical
+      p5.line(0, -p5.height / 2, 0, p5.height / 2);
+      
+      // Línea horizontal
+      p5.line(-p5.width / 2, 0, p5.width / 2, 0);
+      
+      p5.pop();
     }
   };
 
@@ -261,11 +443,38 @@ const Pad = (props) => {
   }
 
   return (
-    <div style={{ width: "100%", height: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-      <span>
-        Press and hold L to play all sounds together. Press K, B, S, H, R for
-        individual sounds and visuals.
-      </span>
+    <div 
+      style={{ 
+        width: "100%", 
+        height: "100vh", 
+        display: "flex", 
+        flexDirection: "column", 
+        justifyContent: "center", 
+        alignItems: "center",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        WebkitTouchCallout: "none",
+        WebkitTapHighlightColor: "transparent",
+        touchAction: "none",
+      }}
+    >
+      {!isMobile && (
+        <span>
+          Press and hold L to play all sounds together. Press K, B, S, H, R for
+          individual sounds and visuals.
+        </span>
+      )}
+      <style jsx global>{`
+        canvas {
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -webkit-touch-callout: none !important;
+          -webkit-tap-highlight-color: transparent !important;
+          touch-action: none !important;
+          display: block;
+          outline: none;
+        }
+      `}</style>
       <Sketch setup={setup} draw={draw} preload={preload} />
     </div>
   );
