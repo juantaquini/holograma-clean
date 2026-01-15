@@ -1,0 +1,129 @@
+.media-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.media-section-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.media-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  place-items: center;
+  gap: 1rem;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1.5px dashed var(--text-color);
+  background-color: var(--lighter-bg-color);
+  min-height: 170px;
+  max-height: 315px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.media-preview *::marker {
+  display: none;
+}
+
+.media-wrapper {
+  width: 160px;
+  height: 140px;
+  position: relative;
+  list-style: none;
+  touch-action: pan-x;
+  user-select: none;
+  cursor: grab;
+}
+
+.media-wrapper:active {
+  cursor: grabbing;
+}
+
+.media-wrapper * {
+  cursor: inherit;
+}
+
+.media-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.remove-button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(250, 45, 45, 0.75);
+  color: white;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.upload-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+}
+
+.upload-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.add-media-button {
+  width: 160px;
+  height: 140px;
+  border-radius: 8px;
+  border: 1.5px dashed var(--text-color);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.hidden-input {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  .media-wrapper {
+  width: 140px;
+  height: 120px;
+}
+  .media-preview {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    min-height: 170px;
+    max-height: 315px;
+  }
+
+
+.add-media-button {
+  width: 140px;
+  height: 120px;
+}
+}

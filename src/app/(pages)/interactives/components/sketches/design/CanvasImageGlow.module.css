@@ -1,0 +1,160 @@
+.sketch-draw-image-figure-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  pad: 40px;
+  flex-direction: column;
+}
+
+.color-responsive-icon {
+  fill: var(--text-color);
+}
+
+.size-controls-image-figure {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  padding-left: 50px;
+}
+
+.image-preview-container {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.preview-thumbnail {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: border-color 0.3s ease;
+}
+
+.preview-thumbnail.selected {
+  border-color: #91a0dc;
+}
+
+.sketch-draw-image-figure-container-column {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  gap: 25px;
+}
+
+.sketch-draw-image-figure-content {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 50px;
+}
+
+.image-circle-container {
+  display: flex;
+  flex-direction: row;
+  margin-top: 70px;
+  gap: 5vw;
+}
+.control-button {
+  border-radius: 6px;
+  background-color: transparent;
+  font-weight: bold;
+  font-size: 1vw;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1.5px dashed;
+}
+
+.sketch-controls {
+  font-family: "Array", sans-serif;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2.5vh;
+  font-weight: bold;
+}
+
+.color-buttons {
+  border-radius: 5px;
+  font-size: 2vw;
+}
+
+.picker {
+  position: absolute;
+  margin-top: 310px;
+}
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip-text {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  padding: 4px 8px;
+  border: 1.5px dashed;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 2000;
+}
+
+.tooltip:hover .tooltip-text {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media screen and (max-width: 900px) {
+  .sketch-draw-image-figure-container-column {
+    padding-top: 250px;
+  }
+  .size-controls-image-figure {
+    gap: 1.5vh;
+    padding-left: 0px;
+  }
+
+  .sketch-controls {
+    font-family: "Array", sans-serif;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5vh;
+  }
+  .sketch-draw-image-figure-content {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+  }
+
+  .sketch-controls {
+    flex-direction: row;
+  }
+}

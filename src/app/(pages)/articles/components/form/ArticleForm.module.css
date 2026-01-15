@@ -1,0 +1,210 @@
+.article-form {
+  width: 100%;
+  font-family: "IBM Plex Sans";
+  padding: 8vw 3vw 8vw 3vw;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.article-create-input-pair {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.article-create-title {
+  text-align: start;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.article-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  flex: 1;
+}
+
+.article-pair-form-group {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.article-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.article-form-label {
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.article-form-input,
+.article-form-select,
+.article-form-textarea {
+  padding: 0.5rem;
+  border: 1px solid var(--text-color);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: "IBM Plex Sans";
+}
+
+.article-form-textarea {
+  resize: vertical;
+  min-height: 150px;
+}
+
+.article-media-preview-container {
+  position: relative;
+  height: 150px;
+}
+
+.article-media-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  place-items: center;
+  gap: 1rem;
+  border: 1.5px dashed;
+  padding: 8px;
+  border-radius: 8px;
+  overflow-x: auto;
+  background-color: var(--lighter-bg-color);
+  min-height: 170px;
+  max-height: 315px;
+  overflow-y: auto;
+}
+
+.article-media-preview-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 160px;
+  height: 140px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1.5px dashed var(--text-color);
+}
+
+.article-media-preview-item,
+.article-media-preview-item img,
+.article-media-preview-item video {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.media-wrapper {
+  touch-action: pan-x;
+}
+
+.article-media-upload-container {
+  height: 150px;
+  border: 1.5px dashed var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.article-media-upload-container.drag-over {
+  border-color: var(--text-color);
+  background-color: rgba(var(--text-color-rgb), 0.1);
+}
+
+.article-media-upload-label {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.article-media-upload-icon {
+  font-size: 24px;
+  color: var(--text-color);
+}
+
+.article-media-upload-text {
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.article-form-actions {
+  display: flex;
+  gap: 2rem;
+  margin-left: auto;
+}
+
+.custom-button-class .cancel-button {
+  background-color: #ff0000;
+}
+
+.article-form-submit-button {
+  padding: 0.5rem 1rem;
+  border-radius: 32px;
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: opacity 0.3s;
+  margin-left: auto;
+}
+
+.article-form-submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.article-form-cancel-button {
+  padding: 0.5rem 1rem;
+  border-radius: 32px;
+  background-color: #ff0000;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.article-form-cancel-button:hover {
+  background-color: #cc0000;
+}
+
+@media screen and (max-width: 768px) {
+  .article-create-container {
+    padding: 1rem;
+  }
+
+  .article-form {
+    padding: 32vw 3vw 8vw 3vw;
+  }
+
+  .article-create-input-pair {
+    flex-direction: column;
+  }
+
+  .article-media-preview {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .article-media-upload-container {
+    height: 100px;
+  }
+}

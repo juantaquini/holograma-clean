@@ -1,0 +1,166 @@
+.Auth-modal-overlay {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Auth-modal-container {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border-radius: 20px;
+  border: dashed 1.5px var(--text-color);
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  gap: 18px;
+}
+
+.Auth-modal-logo {
+  font-size: 2em;
+  font-family: "Array", sans-serif;
+  letter-spacing: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Auth-modal-password-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.Auth-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.Auth-modal-title {
+  font-weight: 500;
+  font-size: 1.2em;
+  font-family: "Array", sans-serif;
+}
+
+.Auth-modal-error {
+  background-color: rgba(233, 30, 99, 0.2);
+  border: 1px solid var(--border-color);
+  color: var(--text-color-secondary);
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.Auth-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: 100%;
+}
+
+.Auth-modal-inputs {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 12px;
+}
+
+.Auth-modal-auth-buttons {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+
+
+
+
+.Auth-modal-forgot-link {
+  font-size: 0.9em;
+  color: var(--text-color-secondary);
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.Auth-modal-forgot-link:hover {
+  text-decoration: underline;
+}
+
+.Auth-modal-btn-primary {
+  background-color: var(--button-color);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.Auth-modal-btn-primary:hover {
+  background-color: #d67300;
+}
+
+.Auth-modal-divider {
+  margin: 15px 0;
+  font-weight: 600;
+  color: var(--opacity-neutral-color);
+}
+
+.Auth-modal-btn-google {
+  background-color: white;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.Auth-modal-header-title {
+  font-size: 24px;
+  font-family: "Array", sans-serif;
+  font-weight: 400;
+}
+
+.Auth-modal-btn-google:hover {
+  background-color: #f5f5f5;
+}
+
+.Auth-modal-signup-text {
+  font-size: 0.9em;
+  color: var(--opacity-neutral-color);
+  margin-top: 10px;
+}
+
+.Auth-modal-link {
+  color: var(--text-color-secondary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.Auth-modal-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .Auth-modal-container {
+    width: 90%;
+    padding: 25px;
+  }
+}
