@@ -173,7 +173,7 @@ const CalmSecond: React.FC = () => {
           <Sketch setup={setup} draw={draw} windowResized={windowResized} />
         ) : (
           <button
-            className={styles["permission-button-red"]}
+            className={styles["play-button"]}
             onClick={requestAudioPermission}
           >
             <FaPlay />

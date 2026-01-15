@@ -39,6 +39,12 @@ let goylOffset = 0;
 
 let cubeRotation = 0;
 
+// Estados de animación
+let suziPhase = 0;
+let harmPhase = 0;
+let goylPhase = 0;
+let circlePhase = 0;
+
 const KEYS = [66, 75, 83, 72]; // B K S H
 let activeTouches = new Map();
 
@@ -128,33 +134,45 @@ const Pad = (props) => {
     if (index === 0) {
       if (on && !isSoundOn) {
         sound.loop();
+        sound.amp(0);
+        sound.amp(1, 0.05);
         isSoundOn = true;
       } else if (!on && isSoundOn) {
-        sound.stop();
+        sound.amp(0, 0.05);
+        setTimeout(() => sound.stop(), 60);
         isSoundOn = false;
       }
     } else if (index === 1) {
       if (on && !isSound1On) {
         sound1.loop();
+        sound1.amp(0);
+        sound1.amp(1, 0.05);
         isSound1On = true;
       } else if (!on && isSound1On) {
-        sound1.stop();
+        sound1.amp(0, 0.05);
+        setTimeout(() => sound1.stop(), 60);
         isSound1On = false;
       }
     } else if (index === 2) {
       if (on && !isSound2On) {
         sound2.loop();
+        sound2.amp(0);
+        sound2.amp(1, 0.05);
         isSound2On = true;
       } else if (!on && isSound2On) {
-        sound2.stop();
+        sound2.amp(0, 0.05);
+        setTimeout(() => sound2.stop(), 60);
         isSound2On = false;
       }
     } else if (index === 3) {
       if (on && !isSound3On) {
         sound3.loop();
+        sound3.amp(0);
+        sound3.amp(1, 0.05);
         isSound3On = true;
       } else if (!on && isSound3On) {
-        sound3.stop();
+        sound3.amp(0, 0.05);
+        setTimeout(() => sound3.stop(), 60);
         isSound3On = false;
       }
     }
@@ -232,9 +250,21 @@ const Pad = (props) => {
     if (!isMobile && p5.keyIsDown(76)) {
       if (!areSoundsStarted) {
         sound.loop();
+        sound.amp(0);
+        sound.amp(1, 0.05);
+        
         sound1.loop();
+        sound1.amp(0);
+        sound1.amp(1, 0.05);
+        
         sound2.loop();
+        sound2.amp(0);
+        sound2.amp(1, 0.05);
+        
         sound3.loop();
+        sound3.amp(0);
+        sound3.amp(1, 0.05);
+        
         areSoundsStarted = true;
         cubeRotation = 0;
       }
@@ -250,10 +280,16 @@ const Pad = (props) => {
       cubeRotation += 0.01;
     } else {
       if (areSoundsStarted) {
-        sound.stop();
-        sound1.stop();
-        sound2.stop();
-        sound3.stop();
+        sound.amp(0, 0.05);
+        sound1.amp(0, 0.05);
+        sound2.amp(0, 0.05);
+        sound3.amp(0, 0.05);
+        setTimeout(() => {
+          sound.stop();
+          sound1.stop();
+          sound2.stop();
+          sound3.stop();
+        }, 60);
         areSoundsStarted = false;
       }
     }
@@ -263,40 +299,52 @@ const Pad = (props) => {
       if (p5.keyIsDown(66)) {
         if (!isSoundOn) {
           sound.loop();
+          sound.amp(0);
+          sound.amp(1, 0.05);
           isSoundOn = true;
         }
       } else if (isSoundOn) {
-        sound.stop();
+        sound.amp(0, 0.05);
+        setTimeout(() => sound.stop(), 60);
         isSoundOn = false;
       }
 
       if (p5.keyIsDown(75)) {
         if (!isSound1On) {
           sound1.loop();
+          sound1.amp(0);
+          sound1.amp(1, 0.05);
           isSound1On = true;
         }
       } else if (isSound1On) {
-        sound1.stop();
+        sound1.amp(0, 0.05);
+        setTimeout(() => sound1.stop(), 60);
         isSound1On = false;
       }
 
       if (p5.keyIsDown(83)) {
         if (!isSound2On) {
           sound2.loop();
+          sound2.amp(0);
+          sound2.amp(1, 0.05);
           isSound2On = true;
         }
       } else if (isSound2On) {
-        sound2.stop();
+        sound2.amp(0, 0.05);
+        setTimeout(() => sound2.stop(), 60);
         isSound2On = false;
       }
 
       if (p5.keyIsDown(72)) {
         if (!isSound3On) {
           sound3.loop();
+          sound3.amp(0);
+          sound3.amp(1, 0.05);
           isSound3On = true;
         }
       } else if (isSound3On) {
-        sound3.stop();
+        sound3.amp(0, 0.05);
+        setTimeout(() => sound3.stop(), 60);
         isSound3On = false;
       }
     }
@@ -304,53 +352,79 @@ const Pad = (props) => {
     // Visuales: suzi (B / cuadrante 0)
     if (isSoundOn && sound.isPlaying()) {
       p5.push();
-      const scaleValue = p5.sin(suziAngle);
-      suziSize = p5.map(scaleValue, -1, 1, 50, 900);
-      suziAngle += 0.5;
-      p5.translate(p5.width / -50, p5.height / 24, -700);
-      p5.image(
-        suzi,
-        -suziSize / 2,
-        -suziSize / 2 + suziOffset,
-        suziSize,
-        suziSize
-      );
+      
+      if (isMobile) {
+        suziPhase += 0.02;
+        const alpha = 80 + p5.sin(suziPhase) * 80;
+        p5.tint(255, alpha);
+        
+        const x = -p5.width / 4;
+        const y = -p5.height / 4;
+        p5.translate(x, y);
+        
+        const scale = Math.max(p5.width / suzi.width, p5.height / suzi.height) * 0.6;
+        p5.image(suzi, -suzi.width * scale / 2, -suzi.height * scale / 2, suzi.width * scale, suzi.height * scale);
+      } else {
+        const scaleValue = p5.sin(suziAngle);
+        suziSize = p5.map(scaleValue, -1, 1, 50, 900);
+        suziAngle += 0.5;
+        p5.translate(p5.width / -50, p5.height / 24, -700);
+        p5.image(suzi, -suziSize / 2, -suziSize / 2 + suziOffset, suziSize, suziSize);
+      }
+      
       p5.pop();
     }
 
     // Visuales: harm (K / cuadrante 1)
     if (isSound1On && sound1.isPlaying()) {
       p5.push();
-      const scaleValue = p5.sin(harmAngle);
-      harmSize = p5.map(scaleValue, -1, 1, 50, 900);
-      harmAngle += 0.5;
-
-      const harmXPos = (p5.width * 1.5) / 1.6;
-      p5.translate(harmXPos, p5.height / 8, -700);
-      p5.image(
-        harm,
-        -harmSize / 2,
-        -harmSize / 2 + harmOffset,
-        harmSize,
-        harmSize
-      );
+      
+      if (isMobile) {
+        harmPhase += 0.02;
+        const alpha = 80 + p5.sin(harmPhase) * 80;
+        p5.tint(255, alpha);
+        
+        const x = p5.width / 4;
+        const y = -p5.height / 4;
+        p5.translate(x, y);
+        
+        const scale = Math.max(p5.width / harm.width, p5.height / harm.height) * 0.6;
+        p5.image(harm, -harm.width * scale / 2, -harm.height * scale / 2, harm.width * scale, harm.height * scale);
+      } else {
+        const scaleValue = p5.sin(harmAngle);
+        harmSize = p5.map(scaleValue, -1, 1, 50, 900);
+        harmAngle += 0.5;
+        const harmXPos = (p5.width * 1.5) / 1.6;
+        p5.translate(harmXPos, p5.height / 8, -700);
+        p5.image(harm, -harmSize / 2, -harmSize / 2 + harmOffset, harmSize, harmSize);
+      }
+      
       p5.pop();
     }
 
     // Visuales: goyl (S / cuadrante 2)
     if (isSound2On && sound2.isPlaying()) {
       p5.push();
-      const scaleValue = p5.sin(goylAngle);
-      goylSize = p5.map(scaleValue, -1, 1, 50, 900);
-      goylAngle += 0.5;
-      p5.translate(p5.width / -1, p5.height / 8, -700);
-      p5.image(
-        goyl,
-        -goylSize / 2,
-        -goylSize / 2 + goylOffset,
-        goylSize,
-        goylSize
-      );
+      
+      if (isMobile) {
+        goylPhase += 0.02;
+        const alpha = 80 + p5.sin(goylPhase) * 80;
+        p5.tint(255, alpha);
+        
+        const x = -p5.width / 4;
+        const y = p5.height / 4;
+        p5.translate(x, y);
+        
+        const scale = Math.max(p5.width / goyl.width, p5.height / goyl.height) * 0.6;
+        p5.image(goyl, -goyl.width * scale / 2, -goyl.height * scale / 2, goyl.width * scale, goyl.height * scale);
+      } else {
+        const scaleValue = p5.sin(goylAngle);
+        goylSize = p5.map(scaleValue, -1, 1, 50, 900);
+        goylAngle += 0.5;
+        p5.translate(p5.width / -1, p5.height / 8, -700);
+        p5.image(goyl, -goylSize / 2, -goylSize / 2 + goylOffset, goylSize, goylSize);
+      }
+      
       p5.pop();
     }
 
@@ -362,34 +436,53 @@ const Pad = (props) => {
       isHKeyPressed = false;
     }
 
-    if (isHKeyPressed || (isMobile && isSound3On)) {
-      p5.fill(350, 4, 309);
-      const centerX = p5.width / -60;
-      const centerY = p5.height / 60;
-      p5.ellipse(centerX, centerY, circleRadius, circleRadius);
-
-      if (isGrowing) {
-        circleRadius += 10;
-        if (circleRadius > 200) {
-          circleRadius = 200;
-          isGrowing = false;
-        }
+    if ((isMobile && isSound3On) || (!isMobile && isHKeyPressed)) {
+      p5.push();
+      
+      if (isMobile) {
+        circlePhase += 0.05;
+        const size = 50 + p5.sin(circlePhase) * 100;
+        
+        const x = p5.width / 4;
+        const y = p5.height / 4;
+        p5.translate(x, y);
+        
+        p5.fill(350, 4, 309);
+        p5.ellipse(0, 0, size, size);
       } else {
-        circleRadius -= 5;
-        if (circleRadius < 5) {
-          circleRadius = 5;
-          isGrowing = true;
+        p5.fill(350, 4, 309);
+        const centerX = p5.width / -60;
+        const centerY = p5.height / 60;
+        p5.ellipse(centerX, centerY, circleRadius, circleRadius);
+
+        if (isGrowing) {
+          circleRadius += 10;
+          if (circleRadius > 200) {
+            circleRadius = 200;
+            isGrowing = false;
+          }
+        } else {
+          circleRadius -= 5;
+          if (circleRadius < 5) {
+            circleRadius = 5;
+            isGrowing = true;
+          }
         }
       }
+      
+      p5.pop();
     }
 
-    // R key - estrellas (desktop only)
+    // Desktop: R key - estrellas
     if (!isMobile) {
       if (p5.keyIsDown(82) && !isSound4On) {
         sound4.loop();
+        sound4.amp(0);
+        sound4.amp(1, 0.05);
         isSound4On = true;
       } else if (!p5.keyIsDown(82) && isSound4On) {
-        sound4.stop();
+        sound4.amp(0, 0.05);
+        setTimeout(() => sound4.stop(), 60);
         isSound4On = false;
         stars = [];
       }

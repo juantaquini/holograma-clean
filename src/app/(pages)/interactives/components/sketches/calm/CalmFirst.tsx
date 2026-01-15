@@ -266,7 +266,7 @@ const CalmFirst: React.FC = () => {
           />
         ) : (
           <button
-            className={styles["permission-button-red"]}
+            className={styles[""]}
             onClick={requestAudioPermission}
           >
             <FaPlay />
@@ -276,7 +276,7 @@ const CalmFirst: React.FC = () => {
       {showButton && (
         <button
           onClick={togglePausePlay}
-          className={styles["permission-button"]}
+          className={styles["play-button"]}
         >
           {paused ? "Play" : "Pause"}
         </button>

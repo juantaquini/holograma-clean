@@ -12,14 +12,13 @@ interface Props {
 }
 
 export function MediaItem({ url, kind }: Props) {
-  const waveformRef = useRef<HTMLDivElement>(null);
+  const waveformRef = useRef<HTMLDivElement | null>(null);
   const wsRef = useRef<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (kind !== "audio" || !waveformRef.current) return;
 
-    let mounted = true;
     const ws = WaveSurfer.create({
       container: waveformRef.current,
       height: 40,
@@ -32,30 +31,15 @@ export function MediaItem({ url, kind }: Props) {
 
     wsRef.current = ws;
 
-    ws.on("play", () => mounted && setIsPlaying(true));
-    ws.on("pause", () => mounted && setIsPlaying(false));
-    ws.on("finish", () => mounted && setIsPlaying(false));
+    ws.on("play", () => setIsPlaying(true));
+    ws.on("pause", () => setIsPlaying(false));
+    ws.on("finish", () => setIsPlaying(false));
 
-    // ✅ Cargar con manejo de errores
-    ws.load(url).catch((err) => {
-      if (mounted) {
-        console.debug("Error loading audio:", err);
-      }
-    });
+    ws.load(url);
 
     return () => {
-      mounted = false;
-      // ✅ Detener primero, luego destruir
-      if (wsRef.current) {
-        try {
-          wsRef.current.stop();
-          wsRef.current.unAll(); // Remover todos los listeners
-          wsRef.current.destroy();
-        } catch (err) {
-          // Silenciar errores de cleanup
-        }
-        wsRef.current = null;
-      }
+      ws.destroy();
+      wsRef.current = null;
     };
   }, [kind, url]);
 
@@ -64,7 +48,6 @@ export function MediaItem({ url, kind }: Props) {
     return (
       <img
         src={url}
-        alt="preview"
         draggable={false}
         onDragStart={(e) => e.preventDefault()}
         className={styles["media-item"]}
@@ -77,6 +60,7 @@ export function MediaItem({ url, kind }: Props) {
     return (
       <video
         src={url}
+        controls
         draggable={false}
         onDragStart={(e) => e.preventDefault()}
         className={styles["media-item"]}
@@ -87,16 +71,20 @@ export function MediaItem({ url, kind }: Props) {
   /* AUDIO */
   if (kind === "audio") {
     return (
-      <div className={styles["audio-container"]}>
-        <div ref={waveformRef} className={styles["waveform"]} />
-        <button
-          type="button"
-          draggable={false}
-          onDragStart={(e) => e.preventDefault()}
-          onClick={() => wsRef.current?.playPause()}
-        >
+      <div
+        className={styles["media-item-audio"]}
+        draggable={false}
+        onDragStart={(e) => e.preventDefault()}
+        onClick={() => wsRef.current?.playPause()}
+      >
+        <span className={styles["audio-icon"]}>
           {isPlaying ? <FaPause /> : <FaPlay />}
-        </button>
+        </span>
+
+        <div
+          ref={waveformRef}
+          className={styles["audio-waveform"]}
+        />
       </div>
     );
   }

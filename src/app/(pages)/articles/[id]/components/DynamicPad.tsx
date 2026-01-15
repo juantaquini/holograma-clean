@@ -27,6 +27,7 @@ const DynamicPad: React.FC<Props> = ({
   const alphaPhase = useRef<number[]>([0, 1, 2, 3]);
   const activeTouches = useRef<Map<number, number>>(new Map()); // touchId -> quadrant
   const canvasRef = useRef<any>(null);
+  const fadeTimeouts = useRef<any[]>([]);
 
   const [isMobile, setIsMobile] = useState(false);
   const [Sketch, setSketch] = useState<any>(null);
@@ -50,6 +51,8 @@ const DynamicPad: React.FC<Props> = ({
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
+      // Limpiar timeouts al desmontar
+      fadeTimeouts.current.forEach(timeout => clearTimeout(timeout));
     };
   }, []);
 
@@ -111,8 +114,17 @@ const DynamicPad: React.FC<Props> = ({
     const s = sounds.current[i];
     if (!s) return;
 
+    // Limpiar timeout previo si existe
+    if (fadeTimeouts.current[i]) {
+      clearTimeout(fadeTimeouts.current[i]);
+      fadeTimeouts.current[i] = null;
+    }
+
     if (on && !soundOn.current[i]) {
       s.loop();
+      s.amp(0); // Empezar en volumen 0
+      s.amp(1, 0.05); // Fade-in a volumen 1 en 50ms
+      
       const vid = looped(vids.current, i);
       if (vid && vid.elt.paused) {
         vid.loop();
@@ -121,7 +133,11 @@ const DynamicPad: React.FC<Props> = ({
     }
 
     if (!on && soundOn.current[i]) {
-      s.stop();
+      s.amp(0, 0.05); // Fade-out en 50ms
+      fadeTimeouts.current[i] = setTimeout(() => {
+        s.stop();
+        fadeTimeouts.current[i] = null;
+      }, 60); // Esperar 60ms antes de parar completamente
       soundOn.current[i] = false;
     }
   };

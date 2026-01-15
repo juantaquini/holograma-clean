@@ -36,32 +36,38 @@ export function MediaSection({
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // Filtramos los items por kind y en el orden actual
   const items = useMemo(() => {
     return order
       .map(
         (id) =>
-          existing.find((m) => m.id === id) ??
-          added.find((m) => m.id === id)
+          existing.find((m) => m.id === id) ?? added.find((m) => m.id === id)
       )
-      .filter(
-        (m): m is ExistingMedia | NewMedia =>
-          !!m && m.kind === kind
-      );
+      .filter((m): m is ExistingMedia | NewMedia => !!m && m.kind === kind);
   }, [order, existing, added, kind]);
 
-  // ✅ Handler personalizado que solo actualiza items del kind actual
+  // Mantener orden de otros kinds al reordenar
   const handleReorder = (newItemIds: string[]) => {
     setOrder((prevOrder) => {
-      // Separar IDs por kind
       const otherKindIds = prevOrder.filter((id) => {
-        const item = existing.find((m) => m.id === id) ?? added.find((m) => m.id === id);
+        const item =
+          existing.find((m) => m.id === id) ?? added.find((m) => m.id === id);
         return item && item.kind !== kind;
       });
-
-      // Combinar: mantener otros kinds + nuevo orden del kind actual
       return [...otherKindIds, ...newItemIds];
     });
   };
+
+  // Atributo accept para iOS/mobile
+  const acceptAttr =
+    kind === "image"
+      ? "image/*"
+      : kind === "video"
+      ? "video/*"
+      : "audio/*,audio/mpeg,audio/mp3,audio/wav,audio/ogg";
+
+  // Capture solo para audio (permite grabar en mobile)
+  const captureAttr = kind === "audio" ? "microphone" : undefined;
 
   return (
     <section className={styles["media-section"]}>
@@ -69,13 +75,12 @@ export function MediaSection({
 
       <Reorder.Group
         axis="x"
-        values={items.map(item => item.id)}
+        values={items.map((item) => item.id)}
         onReorder={handleReorder}
         className={styles["media-preview"]}
       >
         {items.map((item) => {
-          const isUploading =
-            "status" in item && item.status === "uploading";
+          const isUploading = "status" in item && item.status === "uploading";
 
           return (
             <Reorder.Item
@@ -124,7 +129,8 @@ export function MediaSection({
         ref={inputRef}
         type="file"
         multiple
-        accept={`${kind}/*`}
+        accept={acceptAttr}
+        capture={kind === "audio" ? ("microphone" as any) : undefined} // ✅ cast a any
         className={styles["hidden-input"]}
         onChange={(e) => addFiles(e.target.files)}
       />

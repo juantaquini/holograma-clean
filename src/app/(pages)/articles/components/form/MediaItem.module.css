@@ -23,7 +23,7 @@
   gap: 8px;
   padding: 8px;
   border-radius: 6px;
-  background: var(--bg-color);
+  border: 1.5px dashed var(--text-color);
   cursor: pointer;
   user-select: none;
 }
