@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/app/(providers)/auth-provider";
@@ -8,8 +8,7 @@ import { useAuth } from "@/app/(providers)/auth-provider";
 import CustomTextInput from "@/components/inputs/CustomTextInput";
 import CustomTextArea from "@/components/inputs/CustomTextArea";
 
-import { ExistingMedia, MediaKind, NewMedia } from "@/types/article";
-
+import { ExistingMedia, MediaKind } from "@/types/article";
 import { MediaSection } from "./MediaSection";
 import { useArticleMedia } from "@/hooks/useArticleMedia";
 
@@ -42,6 +41,15 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
 
   const [saving, setSaving] = useState(false);
 
+  /* =========================
+     SESSION ID (1 por form)
+     ========================= */
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const hasSavedRef = useRef(false);
+
+  /* =========================
+     MEDIA STATE
+     ========================= */
   const initialMedia: ExistingMedia[] =
     article?.media.map((m, i) => ({
       ...m,
@@ -57,8 +65,11 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
     addFiles,
     removeExisting,
     removeAdded,
-  } = useArticleMedia(initialMedia);
+  } = useArticleMedia(initialMedia, sessionIdRef.current);
 
+  /* =========================
+     FORM
+     ========================= */
   const {
     register,
     handleSubmit,
@@ -72,8 +83,36 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
     },
   });
 
+  /* =========================
+     CLEANUP ON ABANDON
+     ========================= */
+  useEffect(() => {
+    if (mode !== "create") return;
+
+    const cleanup = () => {
+      if (hasSavedRef.current) return;
+
+      navigator.sendBeacon(
+        "/api/media/cleanup",
+        JSON.stringify({ session_id: sessionIdRef.current })
+      );
+    };
+
+    window.addEventListener("beforeunload", cleanup);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") cleanup();
+    });
+
+    return () => {
+      window.removeEventListener("beforeunload", cleanup);
+    };
+  }, [mode]);
+
   if (!user) return <p>Tenés que estar logueado</p>;
 
+  /* =========================
+     SUBMIT
+     ========================= */
   const onSubmit = async (data: FormDataType) => {
     setSaving(true);
 
@@ -98,28 +137,19 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
         formData.append("removed_media_ids[]", id);
       });
 
-      // ✅ Usar el array `order` para las posiciones correctas
       order.forEach((id, position) => {
         const existingMedia = existing.find((m) => m.id === id);
         const addedMedia = added.find((m) => m.id === id);
 
         if (existingMedia) {
-          // Media que ya existía: actualizar su posición
           formData.append(
             "media_positions[]",
-            JSON.stringify({
-              id: existingMedia.id,
-              position,
-            })
+            JSON.stringify({ id: existingMedia.id, position })
           );
         } else if (addedMedia && addedMedia.status === "ready") {
-          // Media nueva: enviar con su posición en el orden
           formData.append(
             "media_ids[]",
-            JSON.stringify({
-              id: addedMedia.id,
-              position,
-            })
+            JSON.stringify({ id: addedMedia.id, position })
           );
         }
       });
@@ -132,10 +162,9 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
         }
       );
 
-      if (!res.ok) {
-        throw new Error("Error guardando artículo");
-      }
+      if (!res.ok) throw new Error("Error guardando artículo");
 
+      hasSavedRef.current = true; // ⛔ no cleanup
       router.push("/articles");
     } catch (err) {
       console.error(err);
@@ -144,6 +173,10 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
       setSaving(false);
     }
   };
+
+  /* =========================
+     RENDER
+     ========================= */
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={styles["article-form"]}>
       <div className={styles["article-create-input-pair"]}>
@@ -160,6 +193,7 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
           error={errors.artist}
         />
       </div>
+
       <div className={styles["article-create-input-pair"]}>
         <CustomTextArea name="content" label="Content" control={control} />
         <MediaSection
@@ -174,6 +208,7 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
           addFiles={addFiles}
         />
       </div>
+
       <div className={styles["article-create-input-pair"]}>
         <MediaSection
           title="Videos"
@@ -198,6 +233,7 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
           addFiles={addFiles}
         />
       </div>
+
       <button
         className={styles["article-form-submit-button"]}
         type="submit"

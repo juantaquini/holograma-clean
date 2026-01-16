@@ -1,4 +1,4 @@
-import { useRef, useState, Dispatch, SetStateAction } from "react";
+import { useState, Dispatch, SetStateAction } from "react";
 import { ExistingMedia, NewMedia, MediaKind } from "@/types/article";
 import { uploadMedia } from "@/lib/functions/uploadMedia";
 
@@ -14,7 +14,10 @@ interface UseArticleMediaReturn {
   removeAdded: (id: string) => void;
 }
 
-export function useArticleMedia(initial: ExistingMedia[] = []): UseArticleMediaReturn {
+export function useArticleMedia(
+  initial: ExistingMedia[] = [],
+  sessionId: string
+): UseArticleMediaReturn {
   const [existing, setExisting] = useState<ExistingMedia[]>(initial);
   const [added, setAdded] = useState<NewMedia[]>([]);
   const [removed, setRemoved] = useState<string[]>([]);
@@ -22,8 +25,6 @@ export function useArticleMedia(initial: ExistingMedia[] = []): UseArticleMediaR
   const [order, setOrder] = useState<string[]>(
     initial.map((m) => m.id)
   );
-
-  const sessionId = useRef(crypto.randomUUID());
 
   const addFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -52,7 +53,7 @@ export function useArticleMedia(initial: ExistingMedia[] = []): UseArticleMediaR
       setOrder((p) => [...p, tempId]);
 
       try {
-        const media = await uploadMedia(file, sessionId.current);
+        const media = await uploadMedia(file, sessionId);
 
         setAdded((p) =>
           p.map((m) =>
