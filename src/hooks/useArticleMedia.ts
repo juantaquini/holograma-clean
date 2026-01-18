@@ -18,38 +18,29 @@ export function useArticleMedia(
   initial: ExistingMedia[] = [],
   sessionId: string
 ): UseArticleMediaReturn {
-  const [existing, setExisting] = useState<ExistingMedia[]>(initial);
+  const [existing, setExisting] = useState(initial);
   const [added, setAdded] = useState<NewMedia[]>([]);
   const [removed, setRemoved] = useState<string[]>([]);
-
-  const [order, setOrder] = useState<string[]>(
-    initial.map((m) => m.id)
-  );
+  const [order, setOrder] = useState(initial.map((m) => m.id));
 
   const addFiles = async (files: FileList | null) => {
     if (!files) return;
 
     for (const file of Array.from(files)) {
-      const kind: MediaKind = file.type.startsWith("image")
-        ? "image"
-        : file.type.startsWith("video")
-        ? "video"
-        : "audio";
+      const kind: MediaKind =
+        file.type.startsWith("image")
+          ? "image"
+          : file.type.startsWith("video")
+          ? "video"
+          : "audio";
 
       const tempId = crypto.randomUUID();
       const tempUrl = URL.createObjectURL(file);
 
       setAdded((p) => [
         ...p,
-        {
-          id: tempId,
-          file,
-          url: tempUrl,
-          kind,
-          status: "uploading",
-        },
+        { id: tempId, file, url: tempUrl, kind, status: "uploading" },
       ]);
-
       setOrder((p) => [...p, tempId]);
 
       try {
@@ -69,7 +60,7 @@ export function useArticleMedia(
 
         URL.revokeObjectURL(tempUrl);
       } catch (err) {
-        console.error(err);
+        console.error("Upload media error:", err);
         setAdded((p) =>
           p.map((m) =>
             m.id === tempId ? { ...m, status: "error" } : m
@@ -88,12 +79,9 @@ export function useArticleMedia(
   const removeAdded = (id: string) => {
     setAdded((p) => {
       const item = p.find((m) => m.id === id);
-      if (item?.url.startsWith("blob:")) {
-        URL.revokeObjectURL(item.url);
-      }
+      if (item?.url.startsWith("blob:")) URL.revokeObjectURL(item.url);
       return p.filter((m) => m.id !== id);
     });
-
     setOrder((p) => p.filter((x) => x !== id));
   };
 

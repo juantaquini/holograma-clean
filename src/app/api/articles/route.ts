@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/supabase-server";
-import cloudinary from "@/lib/cloudinary/cloudinary";
 
 export const runtime = "nodejs";
 

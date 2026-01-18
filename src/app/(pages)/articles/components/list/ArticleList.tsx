@@ -33,6 +33,8 @@ const ArticleList = ({ filterUid }: ArticleListProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showMine, setShowMine] = useState(false);
 
+  console.log(articles)
+
   useEffect(() => {
     const fetchArticles = async () => {
       try {

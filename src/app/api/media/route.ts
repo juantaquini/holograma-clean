@@ -1,49 +1,84 @@
 import { NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary/cloudinary";
+import { uploadToR2 } from "@/lib/r2/r2-client";
 import { supabase } from "@/lib/supabase/supabase-server";
 import { getMediaKind } from "@/lib/functions/getMediaKind";
+
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const formData = await req.formData();
+  try {
+    const formData = await req.formData();
 
-  const file = formData.get("file") as File;
-  const sessionId = formData.get("session_id") as string;
+    const file = formData.get("file") as File;
+    const sessionId = formData.get("session_id") as string;
 
-  if (!file || !sessionId) {
-    return NextResponse.json({ error: "Missing data" }, { status: 400 });
+    console.log("📤 Upload iniciado:", { 
+      fileName: file?.name, 
+      sessionId,
+      hasFile: !!file 
+    });
+
+    if (!file || !sessionId) {
+      return NextResponse.json({ error: "Missing data" }, { status: 400 });
+    }
+
+    // Converter file para buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
+    console.log("📦 Buffer criado:", buffer.length, "bytes");
+
+    // Gerar key único para R2
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(7);
+    const ext = file.name.split(".").pop() || "bin";
+    const key = `articles/temp/${sessionId}/${timestamp}-${randomStr}.${ext}`;
+
+    console.log("🔑 Key gerada:", key);
+
+    // Upload para R2
+    console.log("☁️ Iniciando upload para R2...");
+    const url = await uploadToR2(buffer, key, file.type);
+    console.log("✅ Upload R2 completo:", url);
+
+    // Determinar kind do media
+    const kind = getMediaKind(file);
+    console.log("🎯 Kind detectado:", kind);
+
+    // Obter dimensões/duração se for imagem ou vídeo
+    let width: number | null = null;
+    let height: number | null = null;
+    let duration: number | null = null;
+
+    // Salvar no Supabase
+    console.log("💾 Salvando no Supabase...");
+    const { data, error } = await supabase
+      .from("media")
+      .insert({
+        url,
+        public_id: key,
+        provider: "r2",
+        kind,
+        status: "temp",
+        session_id: sessionId,
+        width,
+        height,
+        duration,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("❌ Erro Supabase:", error);
+      throw error;
+    }
+
+    console.log("✅ Media salvo:", data.id);
+    return NextResponse.json(data);
+  } catch (err: any) {
+    console.error("❌ MEDIA UPLOAD ERROR:", err);
+    console.error("Stack:", err.stack);
+    return NextResponse.json(
+      { error: err.message ?? "Upload failed", details: err.toString() },
+      { status: 500 }
+    );
   }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const upload = await new Promise<any>((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      { resource_type: "auto", folder: "articles/temp" },
-      (err, res) => (err ? reject(err) : resolve(res))
-    ).end(buffer);
-  });
-
-  const kind = getMediaKind(file, upload.resource_type);
-
-  const { data, error } = await supabase
-    .from("media")
-    .insert({
-      url: upload.secure_url,
-      public_id: upload.public_id,
-      provider: "cloudinary",
-      kind,
-      status: "temp",
-      session_id: sessionId,
-      width: upload.width ?? null,
-      height: upload.height ?? null,
-      duration: upload.duration ?? null,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  return NextResponse.json(data);
 }
-
-export { getMediaKind };

@@ -1,0 +1,102 @@
+.page {
+  min-height: 100vh;
+  background-color: black;
+  color: white;
+  padding-top: 10rem;
+  width: 100%;
+  padding: 10rem 2rem;
+}
+
+.centered {
+  padding: 5rem 0;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.rightColumn {
+  background-color: #1a1a1a;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  position: relative;
+  min-height: 500px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #60a5fa, #a78bfa);
+}
+
+.padList {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.padItem {
+  padding: 1rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+}
+
+.padItem:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.padSelected {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #3b82f6;
+}
+
+.padTitle {
+  font-weight: bold;
+}
+
+.padDate {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.grayText {
+  color: #9ca3af;
+}
+
+.recorder {
+  margin-top: 2rem;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+}

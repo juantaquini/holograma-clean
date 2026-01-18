@@ -83,31 +83,6 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
     },
   });
 
-  /* =========================
-     CLEANUP ON ABANDON
-     ========================= */
-  useEffect(() => {
-    if (mode !== "create") return;
-
-    const cleanup = () => {
-      if (hasSavedRef.current) return;
-
-      navigator.sendBeacon(
-        "/api/media/cleanup",
-        JSON.stringify({ session_id: sessionIdRef.current })
-      );
-    };
-
-    window.addEventListener("beforeunload", cleanup);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") cleanup();
-    });
-
-    return () => {
-      window.removeEventListener("beforeunload", cleanup);
-    };
-  }, [mode]);
-
   if (!user) return <p>Tenés que estar logueado</p>;
 
   /* =========================
@@ -164,7 +139,7 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
 
       if (!res.ok) throw new Error("Error guardando artículo");
 
-      hasSavedRef.current = true; // ⛔ no cleanup
+      hasSavedRef.current = true; 
       router.push("/articles");
     } catch (err) {
       console.error(err);

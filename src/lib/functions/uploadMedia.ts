@@ -17,7 +17,20 @@ export async function uploadMedia(
     body: fd,
   });
 
-  if (!res.ok) throw new Error("Upload failed");
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Invalid server response");
+  }
 
-  return res.json();
+  if (!res.ok) {
+    throw new Error(data?.error ?? "Upload failed");
+  }
+
+  return {
+    id: data.id,
+    url: data.url,
+    kind: data.kind,
+  };
 }
