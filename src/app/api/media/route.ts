@@ -18,9 +18,11 @@ export async function POST(req: Request) {
       hasFile: !!file 
     });
 
-    if (!file || !sessionId) {
-      return NextResponse.json({ error: "Missing data" }, { status: 400 });
+    if (!file) {
+      return NextResponse.json({ error: "Missing file" }, { status: 400 });
     }
+
+    const effectiveSessionId = sessionId || Math.random().toString(36).slice(2);
 
     // Converter file para buffer
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -30,7 +32,7 @@ export async function POST(req: Request) {
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(7);
     const ext = file.name.split(".").pop() || "bin";
-    const key = `articles/temp/${sessionId}/${timestamp}-${randomStr}.${ext}`;
+    const key = `articles/temp/${effectiveSessionId}/${timestamp}-${randomStr}.${ext}`;
 
     console.log("🔑 Key gerada:", key);
 
@@ -58,7 +60,7 @@ export async function POST(req: Request) {
         provider: "r2",
         kind,
         status: "temp",
-        session_id: sessionId,
+        session_id: effectiveSessionId,
         width,
         height,
         duration,

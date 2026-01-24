@@ -4,23 +4,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { useColorTheme } from "@/app/(providers)/color-theme-provider";
 import { colorPalettes } from "@/lib/color-palettes";
 
-interface Props {
-  audios: string[];
-  images?: string[];
-  videos?: string[];
-}
-
 const KEYS = [75, 66, 83, 72]; 
 
-const DynamicPad: React.FC<Props> = ({
-  audios,
-  images = [],
-  videos = [],
-}) => {
+export default function DynamicPad({ sketch }: { sketch: any }) {
   const { theme } = useColorTheme();
   const palette = colorPalettes[theme];
 
   const sounds = useRef<any[]>([]);
+  const audioElements = useRef<HTMLAudioElement[]>([]); // Fallback
   const soundOn = useRef<boolean[]>([]);
   const imgs = useRef<any[]>([]);
   const vids = useRef<any[]>([]);
@@ -33,14 +24,41 @@ const DynamicPad: React.FC<Props> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [Sketch, setSketch] = useState<any>(null);
   const [p5SoundLoaded, setP5SoundLoaded] = useState(false);
-  const [isReady, setIsReady] = useState(false);
 
-  // Cargar p5.sound primero
+  // Extraer arrays de URLs desde sketch_media
+  const layers = Array.isArray(sketch?.sketch_media)
+    ? sketch.sketch_media
+        .filter((l: any) => l.media)
+        .sort((a: any, b: any) => a.z_index - b.z_index)
+        .slice(0, 4)
+    : [];
+
+  const audios = layers.filter((l: any) => l.media?.kind === "audio").map((l: any) => l.media.url);
+  const images = layers.filter((l: any) => l.media?.kind === "image").map((l: any) => l.media.url);
+  const videos = layers.filter((l: any) => l.media?.kind === "video").map((l: any) => l.media.url);
+
+  console.log("🎛 Space DynamicPad assets", { audiosCount: audios.length, imagesCount: images.length, videosCount: videos.length });
+
+  // Cargar p5.sound - react-p5 ya incluye p5.js
   useEffect(() => {
+    // Inicializar fallbacks de HTMLAudioElement
+    audios.slice(0, 4).forEach((src: string, i: number) => {
+      try {
+        const audio = new Audio(src);
+        audio.loop = true;
+        audio.crossOrigin = "anonymous";
+        audio.preload = "auto";
+        audioElements.current[i] = audio;
+        console.log(`🔊 Native Audio ${i} initialized as fallback`);
+      } catch (e) {
+        console.error(`❌ Error initializing native audio ${i}:`, e);
+      }
+    });
+
     const script = document.createElement("script");
-    script.src =
-      "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js";
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js";
     script.async = true;
+    
     script.onload = () => {
       console.log("✅ p5.sound loaded");
       setP5SoundLoaded(true);
@@ -57,54 +75,57 @@ const DynamicPad: React.FC<Props> = ({
     document.body.appendChild(script);
 
     return () => {
-      console.log("🧹 Cleanup: Removing p5.sound script");
+      console.log("🧹 Cleanup");
+      
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
-    };
-  }, []);
-
-  // Cleanup completo al desmontar
-  useEffect(() => {
-    return () => {
-      console.log("🧹 Cleanup: Stopping all sounds and videos");
       
-      // Limpiar timeouts
       fadeTimeouts.current.forEach(timeout => {
         if (timeout) clearTimeout(timeout);
       });
       fadeTimeouts.current = [];
       
-      // Detener y liberar todos los sonidos
-      sounds.current.forEach((sound, i) => {
+      sounds.current.forEach((sound) => {
         if (sound) {
           try {
             if (sound.isPlaying && sound.isPlaying()) {
               sound.stop();
             }
-            // Liberar recursos del sonido
             if (sound.disconnect) sound.disconnect();
           } catch (e) {
-            console.warn(`Error stopping sound ${i}:`, e);
+            console.warn("Error stopping sound:", e);
           }
         }
       });
       sounds.current = [];
+      
+      // Cleanup native audio
+      audioElements.current.forEach((audio) => {
+        if (audio) {
+          try {
+            audio.pause();
+            audio.src = "";
+          } catch (e) {
+            console.warn("Error stopping native audio:", e);
+          }
+        }
+      });
+      audioElements.current = [];
+
       soundOn.current = [];
       
-      // Detener videos
-      vids.current.forEach((vid, i) => {
+      vids.current.forEach((vid) => {
         if (vid && vid.elt) {
           try {
             vid.elt.pause();
             vid.remove();
           } catch (e) {
-            console.warn(`Error stopping video ${i}:`, e);
+            console.warn("Error stopping video:", e);
           }
         }
       });
       vids.current = [];
-      
       imgs.current = [];
       
       if (p5Instance.current) {
@@ -122,24 +143,59 @@ const DynamicPad: React.FC<Props> = ({
     setIsMobile(/android|iphone|ipad/i.test(navigator.userAgent));
   }, []);
 
+  const ensureAudioContext = () => {
+    try {
+      const p5 = p5Instance.current;
+      const ctx = p5?.getAudioContext?.();
+      if (ctx && ctx.state !== "running") {
+        (window as any).userStartAudio?.();
+        ctx.resume?.();
+        console.log("🔊 Audio context resumed");
+      }
+    } catch (e) {
+      console.warn("Audio context resume failed:", e);
+    }
+  };
+
   const preload = (p5: any) => {
     console.log("🔄 Preloading assets...");
     
-    audios.slice(0, 4).forEach((src, i) => {
+    // Intenta configurar soundFormats pero no bloquea si falla
+    try {
+       // Algunos navegadores necesitan esto, otros no. Lo dejamos opcional.
+       // (window as any).p5?.soundFormats?.('mp3','wav','ogg','webm');
+    } catch {}
+
+    audios.slice(0, 4).forEach((src: string, i: number) => {
       try {
-        sounds.current[i] = p5.loadSound(
-          src,
-          () => console.log(`✅ Audio ${i} loaded`),
-          (err: any) => console.error(`❌ Error loading audio ${i}:`, err)
-        );
+        console.log(`Loading audio ${i}: ${src}`);
+        let sound: any = null;
+        if (typeof (p5 as any).loadSound === 'function') {
+          sound = (p5 as any).loadSound(
+            src,
+            () => console.log(`✅ Audio ${i} loaded (p5)`),
+            (err: any) => console.error(`❌ Error loading audio ${i} (p5):`, err)
+          );
+        } else if ((window as any).p5?.SoundFile) {
+          const SF = (window as any).p5.SoundFile;
+          sound = new SF(
+            src,
+            () => console.log(`✅ Audio ${i} loaded (SoundFile)`),
+            (err: any) => console.error(`❌ Error loading audio ${i} (SoundFile):`, err)
+          );
+        } else {
+          console.warn('p5.sound no disponible, usando fallback nativo');
+        }
+        sounds.current[i] = sound;
         soundOn.current[i] = false;
       } catch (err) {
         console.error(`❌ Error loading sound ${i}:`, err);
       }
     });
 
-    images.forEach((src, i) => {
+    images.forEach((src: string, i: number) => {
       try {
+        console.log(`Loading image ${i}: ${src}`);
         imgs.current[i] = p5.loadImage(
           src,
           () => console.log(`✅ Image ${i} loaded`),
@@ -150,8 +206,9 @@ const DynamicPad: React.FC<Props> = ({
       }
     });
 
-    videos.forEach((src, i) => {
+    videos.forEach((src: string, i: number) => {
       try {
+        console.log(`Loading video ${i}: ${src}`);
         const v = p5.createVideo(src, () => {
           console.log(`✅ Video ${i} loaded`);
         });
@@ -191,7 +248,6 @@ const DynamicPad: React.FC<Props> = ({
       canvas.elt.addEventListener('touchcancel', handleTouchEnd, { passive: false });
     }
     
-    setIsReady(true);
     console.log("✅ Canvas ready");
   };
 
@@ -200,7 +256,9 @@ const DynamicPad: React.FC<Props> = ({
 
   const toggle = (i: number, on: boolean) => {
     const s = sounds.current[i];
-    if (!s) return;
+    const nativeAudio = audioElements.current[i];
+    
+    if (!s && !nativeAudio) return;
 
     if (fadeTimeouts.current[i]) {
       clearTimeout(fadeTimeouts.current[i]);
@@ -209,9 +267,16 @@ const DynamicPad: React.FC<Props> = ({
 
     if (on && !soundOn.current[i]) {
       try {
-        s.loop();
-        s.amp(0);
-        s.amp(1, 0.05);
+        // Intentar p5 sound
+        if (s && s.loop) {
+          s.loop();
+          s.amp(0);
+          s.amp(1, 0.05);
+        } else if (nativeAudio) {
+          // Fallback nativo
+          nativeAudio.volume = 1;
+          nativeAudio.play().catch(e => console.warn("Native play failed:", e));
+        }
         
         const vid = looped(vids.current, i);
         if (vid && vid.elt.paused) {
@@ -225,11 +290,17 @@ const DynamicPad: React.FC<Props> = ({
 
     if (!on && soundOn.current[i]) {
       try {
-        s.amp(0, 0.05);
-        fadeTimeouts.current[i] = setTimeout(() => {
-          s.stop();
-          fadeTimeouts.current[i] = null;
-        }, 60);
+        if (s && s.stop) {
+          s.amp(0, 0.05);
+          fadeTimeouts.current[i] = setTimeout(() => {
+            s.stop();
+            fadeTimeouts.current[i] = null;
+          }, 60);
+        } else if (nativeAudio) {
+          nativeAudio.pause();
+          nativeAudio.currentTime = 0;
+        }
+        
         soundOn.current[i] = false;
       } catch (err) {
         console.error(`Error toggling sound ${i} off:`, err);
@@ -264,6 +335,7 @@ const DynamicPad: React.FC<Props> = ({
   const handleTouchStart = (e: TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    ensureAudioContext();
     const canvas = e.target as HTMLCanvasElement;
 
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -330,6 +402,7 @@ const DynamicPad: React.FC<Props> = ({
     p5.background(bg);
 
     if (!isMobile) {
+      ensureAudioContext();
       KEYS.forEach((k, i) => {
         toggle(i, p5.keyIsDown(k));
       });
@@ -360,11 +433,12 @@ const DynamicPad: React.FC<Props> = ({
         );
       }
 
-      if (hasSound) {
+      {
         const img = looped(imgs.current, i);
         if (img) {
           alphaPhase.current[i] += 0.02;
-          const alpha = 80 + p5.sin(alphaPhase.current[i]) * 80;
+          const base = hasSound ? 80 : 20;
+          const alpha = base + p5.sin(alphaPhase.current[i]) * (hasSound ? 80 : 20);
           p5.tint(255, alpha);
 
           const scale = Math.max(
@@ -443,6 +517,4 @@ const DynamicPad: React.FC<Props> = ({
       <Sketch preload={preload} setup={setup} draw={draw} />
     </div>
   );
-};
-
-export default DynamicPad;
+}

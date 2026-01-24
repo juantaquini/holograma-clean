@@ -1,0 +1,74 @@
+.media-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.media-preview {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1.5px dashed var(--text-color, #ccc);
+  background-color: var(--lighter-bg-color, #181818);
+  min-height: 170px;
+  max-height: 315px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  list-style: none;
+}
+
+.media-wrapper {
+  width: 160px;
+  height: 140px;
+  position: relative;
+  list-style: none;
+  touch-action: pan-x;
+  user-select: none;
+  cursor: grab;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+}
+
+.media-thumb {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.media-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.media-action-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  background: #222;
+  color: #fff;
+  transition: background 0.2s;
+}
+.media-action-btn.edit {
+  background: #3b82f6;
+}
+.media-action-btn.delete {
+  background: #ef4444;
+}
+.media-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
