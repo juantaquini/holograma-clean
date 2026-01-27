@@ -34,6 +34,7 @@ const DynamicPad: React.FC<Props> = ({
   const [Sketch, setSketch] = useState<any>(null);
   const [p5SoundLoaded, setP5SoundLoaded] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [showHelp, setShowHelp] = useState(true);
 
   // Cargar p5.sound primero
   useEffect(() => {
@@ -122,6 +123,20 @@ const DynamicPad: React.FC<Props> = ({
     setIsMobile(/android|iphone|ipad/i.test(navigator.userAgent));
   }, []);
 
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("dynamicPadHelpDismissed");
+      if (stored === "true") setShowHelp(false);
+    } catch {}
+  }, []);
+
+  const dismissHelp = () => {
+    setShowHelp(false);
+    try {
+      window.localStorage.setItem("dynamicPadHelpDismissed", "true");
+    } catch {}
+  };
+
   const preload = (p5: any) => {
     console.log("🔄 Preloading assets...");
     
@@ -209,6 +224,9 @@ const DynamicPad: React.FC<Props> = ({
 
     if (on && !soundOn.current[i]) {
       try {
+        if (s.isPlaying && s.isPlaying()) {
+          s.stop();
+        }
         s.loop();
         s.amp(0);
         s.amp(1, 0.05);
@@ -325,7 +343,7 @@ const DynamicPad: React.FC<Props> = ({
   };
 
   const draw = (p5: any) => {
-    const bg = p5.color(palette.lighter_bg);
+    const bg = p5.color(palette.text_secondary);
     bg.setAlpha(120);
     p5.background(bg);
 
@@ -423,6 +441,177 @@ const DynamicPad: React.FC<Props> = ({
         position: "relative",
       }}
     >
+      {isReady && showHelp && (
+        <div
+          style={{
+            position: "absolute",
+            inset: "16px",
+            zIndex: 5,
+            pointerEvents: "none",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "16px",
+              flexWrap: "wrap",
+            }}
+          >
+            <div
+              style={{
+                background: "rgba(0,0,0,0.55)",
+                color: palette.text,
+                padding: "12px 14px",
+                borderRadius: "14px",
+                border: `1px solid ${palette.border}`,
+                maxWidth: isMobile ? "100%" : "320px",
+                fontSize: "14px",
+                letterSpacing: "0.3px",
+              }}
+            >
+              <div style={{ fontWeight: 600, marginBottom: "6px" }}>
+                Dynamic Pad
+              </div>
+              <div>
+                {isMobile
+                  ? "Tap and hold any quadrant to trigger a layer. Slide to switch. Lift your finger to fade out."
+                  : "Press and hold K, B, S, H to trigger layers. Release to fade out. Try two keys at once."}
+              </div>
+            </div>
+            <button
+              onClick={dismissHelp}
+              style={{
+                pointerEvents: "auto",
+                background: "rgba(0,0,0,0.55)",
+                color: palette.text,
+                border: `1px solid ${palette.border}`,
+                borderRadius: "999px",
+                padding: "8px 14px",
+                fontSize: "12px",
+                letterSpacing: "0.4px",
+                height: "fit-content",
+              }}
+            >
+              Got it
+            </button>
+          </div>
+
+          <div style={{ position: "relative", height: "100%" }}>
+            <svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              style={{ position: "absolute", inset: 0, opacity: 0.8 }}
+            >
+              <line
+                x1="50"
+                y1="6"
+                x2="50"
+                y2="94"
+                stroke={palette.text_secondary}
+                strokeWidth="0.3"
+                strokeDasharray="1,1.2"
+              />
+              <line
+                x1="8"
+                y1="50"
+                x2="92"
+                y2="50"
+                stroke={palette.text_secondary}
+                strokeWidth="0.3"
+                strokeDasharray="1,1.2"
+              />
+            </svg>
+            {!isMobile && (
+              <>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "10%",
+                    left: "12%",
+                    fontSize: "12px",
+                    color: palette.text_secondary,
+                    letterSpacing: "0.4px",
+                  }}
+                >
+                  K
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "10%",
+                    right: "12%",
+                    fontSize: "12px",
+                    color: palette.text_secondary,
+                    letterSpacing: "0.4px",
+                  }}
+                >
+                  B
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "10%",
+                    left: "12%",
+                    fontSize: "12px",
+                    color: palette.text_secondary,
+                    letterSpacing: "0.4px",
+                  }}
+                >
+                  S
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "10%",
+                    right: "12%",
+                    fontSize: "12px",
+                    color: palette.text_secondary,
+                    letterSpacing: "0.4px",
+                  }}
+                >
+                  H
+                </div>
+              </>
+            )}
+            {isMobile && (
+              <>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "12%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    fontSize: "12px",
+                    color: palette.text_secondary,
+                    letterSpacing: "0.4px",
+                  }}
+                >
+                  Tap + Hold
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "12%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    fontSize: "12px",
+                    color: palette.text_secondary,
+                    letterSpacing: "0.4px",
+                  }}
+                >
+                  Slide to Switch
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       <style jsx global>{`
         canvas {
           user-select: none !important;

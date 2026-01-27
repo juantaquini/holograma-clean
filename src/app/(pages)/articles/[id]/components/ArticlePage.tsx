@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/(providers)/auth-provider";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Container from "@/components/ui/Container";
 import LoadingSketch from "@/components/p5/loading/LoadingSketch";
@@ -10,6 +9,7 @@ import Link from "next/link";
 import styles from "./ArticlePage.module.css";
 import AudioPlaylistPlayer from "./AudioPlaylistPlayer";
 import DynamicPad from "./DynamicPad";
+import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
 
 interface ArticleMedia {
   id: string;
@@ -24,13 +24,13 @@ interface Article {
   id: string;
   title: string;
   artist?: string;
-  content: string;
+  content?: string | null;
   images: string[];
   audios: string[];
   videos: string[];
   media: ArticleMedia[];
-  author_uid: string;
-  created_at: string;
+  authorUid: string;
+  createdAt: string;
 }
 
 interface ArticlePageProps {
@@ -43,26 +43,42 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const router = useRouter();
-
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const res = await fetch(`/api/articles/${id}`, {
-          cache: "no-store",
-        });
+        const data = await fetchGraphQL<{ article: Article | null }>(
+          `
+            query Article($id: ID!) {
+              article(id: $id) {
+                id
+                title
+                artist
+                content
+                images
+                audios
+                videos
+                media {
+                  id
+                  url
+                  kind
+                  width
+                  height
+                  duration
+                }
+                authorUid
+                createdAt
+              }
+            }
+          `,
+          { id }
+        );
 
-        if (!res.ok) {
-          if (res.status === 404) {
-            setError("Article not found");
-          } else {
-            setError("Failed to load article");
-          }
+        if (!data.article) {
+          setError("Article not found");
           return;
         }
 
-        const data: Article = await res.json();
-        setArticle(data);
+        setArticle(data.article);
       } catch (err) {
         console.error("Error fetching article:", err);
         setError("An error occurred while loading the article");
@@ -126,7 +142,7 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
           <h1 className={styles["article-title"]}>{article.title}</h1>
 
           <div className={styles["header-actions"]}>
-            {user?.uid === article.author_uid && (
+            {user?.uid === article.authorUid && (
               <Link
                 href={`/articles/${article.id}/edit`}
                 className={styles["edit-button"]}
@@ -147,7 +163,7 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
             <div className={styles["article-content-container"]}>
               <div
                 className={styles["article-content"]}
-                dangerouslySetInnerHTML={{ __html: article.content }}
+                dangerouslySetInnerHTML={{ __html: article.content ?? "" }}
               />
               {article.videos.length > 0 && (
                 <video

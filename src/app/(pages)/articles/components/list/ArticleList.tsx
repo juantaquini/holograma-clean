@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./ArticleList.module.css";
 import LoadingSketch from "@/components/p5/loading/LoadingSketch";
+import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
 
 interface Article {
   id: string;
@@ -15,11 +16,7 @@ interface Article {
   images: string[];
   audios: string[];
   videos: string[];
-  author_uid: string;
-}
-
-interface UserData {
-  role: string;
+  authorUid: string;
 }
 
 interface ArticleListProps {
@@ -32,32 +29,57 @@ const ArticleList = ({ filterUid }: ArticleListProps) => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showMine, setShowMine] = useState(false);
-
-  console.log(articles)
+  const userUid = showMine ? user?.uid ?? null : null;
 
   useEffect(() => {
+    let cancelled = false;
     const fetchArticles = async () => {
       try {
-        const res = await fetch("/api/articles", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch articles");
-        const data = await res.json();
-        setArticles(data);
+        setIsLoading(true);
+        const targetUid =
+          filterUid ?? (showMine && userUid ? userUid : undefined);
+
+        const data = await fetchGraphQL<{ articles: Article[] }>(
+          `
+            query Articles($authorUid: String, $limit: Int!) {
+              articles(authorUid: $authorUid, limit: $limit) {
+                id
+                title
+                artist
+                content
+                images
+                audios
+                videos
+                authorUid
+              }
+            }
+          `,
+          {
+            authorUid: targetUid ?? null,
+            limit: 100,
+          }
+        );
+
+        if (!cancelled) setArticles(data.articles ?? []);
       } catch (err) {
         console.error(err);
-        setArticles([]);
+        if (!cancelled) setArticles([]);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
     fetchArticles();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [filterUid, showMine, userUid]);
 
 
   if (isLoading) return <LoadingSketch />;
 
 
-  const targetUid = filterUid ?? (showMine && user?.uid ? user.uid : undefined);
-  const list = targetUid ? articles.filter(a => a.author_uid === targetUid) : articles;
+  const targetUid = filterUid ?? (showMine && userUid ? userUid : undefined);
+  const list = targetUid ? articles.filter((a) => a.authorUid === targetUid) : articles;
 
   if (!list.length) {
     return (
