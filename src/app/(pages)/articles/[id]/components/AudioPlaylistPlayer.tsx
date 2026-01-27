@@ -14,6 +14,7 @@ import { colorPalettes } from "@/lib/color-palettes";
 interface AudioPlaylistPlayerProps {
   audioUrls: string[];
   albumTitle?: string;
+  onReady?: () => void;
 }
 
 const formatTime = (time: number) => {
@@ -36,6 +37,7 @@ const safeLoad = (ws: WaveSurfer, url: string) => {
 
 export default function AudioPlaylistPlayer({
   audioUrls,
+  onReady,
 }: AudioPlaylistPlayerProps) {
   const { theme } = useColorTheme();
   const palette = colorPalettes[theme];
@@ -67,6 +69,7 @@ export default function AudioPlaylistPlayer({
     ws.on("ready", () => {
       setDuration(ws.getDuration());
       setCurrentTime(0);
+      onReady?.();
     });
 
     ws.on("audioprocess", () => {

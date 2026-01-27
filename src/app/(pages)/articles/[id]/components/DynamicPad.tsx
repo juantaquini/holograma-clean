@@ -210,6 +210,12 @@ const DynamicPad: React.FC<Props> = ({
     console.log("✅ Canvas ready");
   };
 
+  const windowResized = (p5: any) => {
+    try {
+      p5.resizeCanvas(p5.windowWidth, p5.windowHeight * 0.75);
+    } catch {}
+  };
+
   const looped = <T,>(arr: T[], i: number) =>
     arr.length ? arr[i % arr.length] : null;
 
@@ -284,6 +290,12 @@ const DynamicPad: React.FC<Props> = ({
     e.stopPropagation();
     const canvas = e.target as HTMLCanvasElement;
 
+    if (p5Instance.current?.userStartAudio) {
+      try {
+        p5Instance.current.userStartAudio();
+      } catch {}
+    }
+
     for (let i = 0; i < e.changedTouches.length; i++) {
       const touch = e.changedTouches[i];
       if (!isInsideCanvas(touch, canvas)) continue;
@@ -347,6 +359,25 @@ const DynamicPad: React.FC<Props> = ({
     bg.setAlpha(120);
     p5.background(bg);
 
+    const anySoundOn = soundOn.current.some(Boolean);
+    const bgVideo = vids.current[0];
+    if (anySoundOn && bgVideo && bgVideo.width && bgVideo.height) {
+      const scale = Math.max(
+        p5.width / bgVideo.width,
+        p5.height / bgVideo.height
+      );
+      p5.push();
+      p5.tint(255, 255);
+      p5.image(
+        bgVideo,
+        (-bgVideo.width * scale) / 2,
+        (-bgVideo.height * scale) / 2,
+        bgVideo.width * scale,
+        bgVideo.height * scale
+      );
+      p5.pop();
+    }
+
     if (!isMobile) {
       KEYS.forEach((k, i) => {
         toggle(i, p5.keyIsDown(k));
@@ -361,23 +392,6 @@ const DynamicPad: React.FC<Props> = ({
       p5.push();
       p5.translate(x, y);
 
-      const vid = looped(vids.current, i);
-      if (vid && hasSound) {
-        const scale = Math.max(
-          p5.width / vid.width,
-          p5.height / vid.height
-        ) * 0.6;
-
-        p5.tint(255, 255);
-        p5.image(
-          vid,
-          (-vid.width * scale) / 2,
-          (-vid.height * scale) / 2,
-          vid.width * scale,
-          vid.height * scale
-        );
-      }
-
       if (hasSound) {
         const img = looped(imgs.current, i);
         if (img) {
@@ -385,10 +399,9 @@ const DynamicPad: React.FC<Props> = ({
           const alpha = 80 + p5.sin(alphaPhase.current[i]) * 80;
           p5.tint(255, alpha);
 
-          const scale = Math.max(
-            p5.width / img.width,
-            p5.height / img.height
-          ) * 0.6;
+          const quadW = p5.width / 2;
+          const quadH = p5.height / 2;
+          const scale = Math.min(quadW / img.width, quadH / img.height) * 0.85;
 
           p5.image(
             img,
@@ -404,12 +417,7 @@ const DynamicPad: React.FC<Props> = ({
     }
 
     if (isMobile) {
-      p5.push();
-      p5.stroke(palette.text_secondary);
-      p5.strokeWeight(2);
-      p5.line(0, -p5.height / 2, 0, p5.height / 2);
-      p5.line(-p5.width / 2, 0, p5.width / 2, 0);
-      p5.pop();
+      // mobile crosshair is drawn as DOM overlay for perfect centering
     }
   };
 
@@ -629,7 +637,47 @@ const DynamicPad: React.FC<Props> = ({
           pointer-events: none !important;
         }
       `}</style>
-      <Sketch preload={preload} setup={setup} draw={draw} />
+      <Sketch
+        preload={preload}
+        setup={setup}
+        draw={draw}
+        windowResized={windowResized}
+      />
+      {isMobile && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 2,
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: 0,
+              bottom: 0,
+              width: "2px",
+              background: palette.text_secondary,
+              opacity: 0.8,
+              transform: "translateX(-1px)",
+            }}
+          />
+          <span
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: 0,
+              right: 0,
+              height: "2px",
+              background: palette.text_secondary,
+              opacity: 0.8,
+              transform: "translateY(-1px)",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

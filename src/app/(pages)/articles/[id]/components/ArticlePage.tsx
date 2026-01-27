@@ -42,6 +42,9 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
   const [article, setArticle] = useState<Article | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imagesLoaded, setImagesLoaded] = useState(0);
+  const [audioReady, setAudioReady] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -90,6 +93,13 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
     fetchArticle();
   }, [id]);
 
+  useEffect(() => {
+    if (!article) return;
+    setImagesLoaded(0);
+    setAudioReady(article.audios.length === 0);
+    setVideoReady(article.videos.length === 0);
+  }, [article]);
+
   if (isLoading) return <LoadingSketch />;
 
   if (error || !article) {
@@ -107,11 +117,20 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
     );
   }
 
+  const imagesReady = article.images.length === 0 || imagesLoaded >= article.images.length;
+  const mediaReady = imagesReady && audioReady && videoReady;
+
   return (
     <div className={styles["article-layout"]}>
       {/* Images Gallery */}
       {article.images.length > 0 && (
         <div className={styles["gallery-container"]}>
+          {!imagesReady && (
+            <div className={styles["gallery-skeleton"]}>
+              <div className={styles["skeleton-block"]} />
+              <span className={styles["skeleton-label"]}>Loading media…</span>
+            </div>
+          )}
           <div className={styles["gallery-scroll"]}>
             {article.images.map((img, idx) => (
               <div key={idx} className={styles["gallery-item"]}>
@@ -123,6 +142,9 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
                   sizes="100vw"
                   className={styles["gallery-image"]}
                   priority={idx === 0}
+                  onLoadingComplete={() => {
+                    setImagesLoaded((count) => count + 1);
+                  }}
                 />
               </div>
             ))}
@@ -157,7 +179,27 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
           <div className={styles["content-inner"]}>
             {article.audios.length > 0 && (
               <div className={styles["media-section"]}>
-                <AudioPlaylistPlayer audioUrls={article.audios} />
+                {!audioReady && (
+                  <div className={styles["audio-skeleton"]}>
+                    <div className={styles["skeleton-row"]} />
+                    <div className={styles["skeleton-wave"]} />
+                    <span className={styles["skeleton-label"]}>
+                      Loading audio…
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={
+                    audioReady
+                      ? styles["audio-ready"]
+                      : styles["audio-hidden"]
+                  }
+                >
+                  <AudioPlaylistPlayer
+                    audioUrls={article.audios}
+                    onReady={() => setAudioReady(true)}
+                  />
+                </div>
               </div>
             )}
             <div className={styles["article-content-container"]}>
@@ -179,10 +221,12 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
                   controlsList="nodownload nofullscreen noremoteplayback"
                   style={{ pointerEvents: 'none' }}
                   onContextMenu={(e) => e.preventDefault()}
+                  onLoadedData={() => setVideoReady(true)}
+                  onError={() => setVideoReady(true)}
                 />
               )}
             </div>
-            {article.audios.length > 0 && (
+            {article.audios.length > 0 && mediaReady && (
               <DynamicPad
                 audios={article.audios}
                 images={article.images}
