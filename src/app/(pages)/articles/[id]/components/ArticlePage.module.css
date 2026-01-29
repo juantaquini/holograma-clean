@@ -75,7 +75,7 @@
 
 .skeleton-block {
   width: 100%;
-  height: 320px;
+  height: 100%;
   border-radius: 16px;
   border: 1px dashed var(--border-color);
   background: linear-gradient(
@@ -90,7 +90,6 @@
 
 /* Content */
 .content-wrapper {
-  padding: 0 3vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -161,13 +160,13 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 2rem;
+  gap: 4rem;
 }
 
 .article-content-container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 4rem;
   align-items: flex-start;
 }
 
@@ -241,6 +240,49 @@
   text-transform: uppercase;
 }
 
+.skeleton-line {
+  height: 12px;
+  width: 120px;
+  border-radius: 999px;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.06) 8%,
+    rgba(255, 255, 255, 0.16) 18%,
+    rgba(255, 255, 255, 0.06) 33%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+}
+
+.skeleton-title {
+  height: 16px;
+  width: 220px;
+  border-radius: 999px;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.06) 8%,
+    rgba(255, 255, 255, 0.18) 18%,
+    rgba(255, 255, 255, 0.06) 33%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+}
+
+.skeleton-video {
+  width: 100%;
+  height: 240px;
+  border-radius: 16px;
+  border: 1px dashed var(--border-color);
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.04) 8%,
+    rgba(255, 255, 255, 0.12) 18%,
+    rgba(255, 255, 255, 0.04) 33%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+}
+
 @keyframes shimmer {
   0% {
     background-position: 200% 0;
@@ -252,7 +294,7 @@
 
 @media (min-width: 768px) {
   .gallery-container {
-    height: 85vh;
+    height: 75vh;
   }
 
   .video-player {

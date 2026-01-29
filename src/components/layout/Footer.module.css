@@ -1,15 +1,14 @@
 .footer {
   width: 100%;
-  border-top: 1px solid var(--border-color);
-  margin-top: 64px;
-  padding: 32px 18px 24px;
   background: var(--bg-color);
   color: var(--text-color);
+  padding: 3rem 3vw;
 }
 
 .footer-inner {
   width: 100%;
-  max-width: 1200px;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 4vw;
   margin: 0 auto;
   display: flex;
   align-items: flex-start;
@@ -68,9 +67,6 @@
 }
 
 @media (max-width: 720px) {
-  .footer {
-    padding: 24px 14px 20px;
-  }
 
   .footer-inner {
     flex-direction: column;

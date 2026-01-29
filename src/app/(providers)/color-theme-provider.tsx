@@ -14,13 +14,26 @@ export default function ColorThemeProvider({ children }: { children: React.React
   const [theme, setTheme] = useState<ThemeName>("whitesmokeAzul");
 
   useEffect(() => {
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem("selectedTheme") : null;
-    if (saved && saved in colorPalettes) setTheme(saved as ThemeName);
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const applyTheme = () => setTheme(media.matches ? "azulMagenta" : "whitesmokeAzul");
+    applyTheme();
+    if (media.addEventListener) {
+      media.addEventListener("change", applyTheme);
+    } else {
+      media.addListener(applyTheme);
+    }
+    return () => {
+      if (media.removeEventListener) {
+        media.removeEventListener("change", applyTheme);
+      } else {
+        media.removeListener(applyTheme);
+      }
+    };
   }, []);
 
   const changeTheme = (newTheme: ThemeName) => {
     setTheme(newTheme);
-    if (typeof window !== "undefined") window.localStorage.setItem("selectedTheme", newTheme);
   };
 
   const colors = colorPalettes[theme];

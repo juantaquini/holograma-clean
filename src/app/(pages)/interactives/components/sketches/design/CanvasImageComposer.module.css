@@ -16,7 +16,7 @@
   justify-content: center;
   gap: 35px;
   overflow: hidden;
-  padding: 110px 0px 40px 0px;
+  padding: 0px 0px 40px 0px;
   height: auto;
 }
 
@@ -209,7 +209,6 @@
 
 @media (min-width: 300px) and (max-width: 1000px) {
   .canvas-images-container {
-    padding-top: 120px;
     flex-direction: column;
   }
 }

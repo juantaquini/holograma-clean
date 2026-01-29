@@ -57,13 +57,16 @@
 
 .remove-button {
   position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   top: 6px;
   right: 6px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
   border: none;
-  background: rgba(250, 45, 45, 0.75);
+  background: rgb(250, 45, 45);
   color: white;
   cursor: pointer;
   z-index: 5;

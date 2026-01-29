@@ -32,11 +32,11 @@ export default function RootLayout({
               <PopupProvider>
                 <Navbar />
                 {children}
-                <Footer />
               </PopupProvider>
             </ColorThemeProvider>
           </AuthContextProvider>
         </div>
+        <Footer />
       </body>
     </html>
   );

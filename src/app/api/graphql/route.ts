@@ -50,7 +50,7 @@ const schema = buildSchema(`
   }
 
   type Query {
-    articles(authorUid: String, limit: Int): [Article!]!
+    articles(authorUid: String, limit: Int, offset: Int): [Article!]!
     recentArticles(limit: Int): [Article!]!
     article(id: ID!): Article
   }
@@ -61,6 +61,11 @@ const MAX_LIMIT = 100;
 const clampLimit = (limit?: number | null) => {
   const value = limit && Number.isFinite(limit) ? Math.floor(limit) : DEFAULT_LIMIT;
   return Math.min(Math.max(value, 1), MAX_LIMIT);
+};
+
+const clampOffset = (offset?: number | null) => {
+  const value = offset && Number.isFinite(offset) ? Math.floor(offset) : 0;
+  return Math.max(value, 0);
 };
 
 const mapArticle = (article: ArticleRow) => {
@@ -86,11 +91,14 @@ const mapArticle = (article: ArticleRow) => {
 const fetchArticles = async ({
   authorUid,
   limit,
+  offset,
 }: {
   authorUid?: string | null;
   limit?: number | null;
+  offset?: number | null;
 }) => {
   const safeLimit = clampLimit(limit);
+  const safeOffset = clampOffset(offset);
 
   let query = supabase
     .from("article")
@@ -116,7 +124,7 @@ const fetchArticles = async ({
     `
     )
     .order("created_at", { ascending: false })
-    .limit(safeLimit);
+    .range(safeOffset, safeOffset + safeLimit - 1);
 
   if (authorUid) {
     query = query.eq("author_uid", authorUid);
@@ -162,8 +170,15 @@ const fetchArticleById = async (id: string) => {
 };
 
 const root = {
-  articles: ({ authorUid, limit }: { authorUid?: string; limit?: number }) =>
-    fetchArticles({ authorUid, limit }),
+  articles: ({
+    authorUid,
+    limit,
+    offset,
+  }: {
+    authorUid?: string;
+    limit?: number;
+    offset?: number;
+  }) => fetchArticles({ authorUid, limit, offset }),
   recentArticles: ({ limit }: { limit?: number }) => fetchArticles({ limit }),
   article: ({ id }: { id: string }) => fetchArticleById(id),
 };

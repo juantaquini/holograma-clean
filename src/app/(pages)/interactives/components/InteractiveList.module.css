@@ -1,3 +1,13 @@
+.interactive-list-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 80vh;
+  position: relative;
+}
+
+
 .interactive-list-sketch-list-view-container {
   display: flex;
   flex-direction: column;
@@ -26,10 +36,6 @@
   flex-wrap: wrap;
   justify-content: center;
   z-index: 20;
-}
-
-.interactive-list-sketch-carousel {
-  margin-bottom: 100px;
 }
 
 .interactive-list-sketch-random-container {
@@ -159,9 +165,6 @@
   .interactive-list-section-button {
     font-size: 0.7rem;
   }
-  .interactive-list-sketch-carousel {
-    margin-bottom: 0;
-  }
 }
 
 @media screen and (max-width: 480px) {
@@ -177,14 +180,4 @@
   .interactive-list-description-container {
     font-size: 0.6rem;
   }
-}
-
-.interactive-list-page-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  height: 100vh;
-  justify-content: center;
-  position: relative;
 }

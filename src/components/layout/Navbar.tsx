@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
-import { useColorTheme } from "@/app/(providers)/color-theme-provider";
 import { FiMenu, FiX } from "react-icons/fi";
 import { usePopup } from "@/app/(providers)/popup-provider";
 import { useAuth } from "@/app/(providers)/auth-provider";
@@ -17,7 +16,6 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
 
-  const { theme, changeTheme } = useColorTheme();
   const { openPopup, closePopup } = usePopup();
   const auth = useAuth();
   const router = useRouter();
@@ -30,16 +28,6 @@ export default function Navbar() {
   }
 
   const { user, logout } = auth;
-
-  const cycleTheme = () => {
-    const next =
-      theme === "whitesmokeAzul"
-        ? "azulMagenta"
-        : theme === "azulMagenta"
-        ? "marronCeleste"
-        : "whitesmokeAzul";
-    changeTheme(next);
-  };
 
   useEffect(() => {
     const onResize = () => {
@@ -99,7 +87,6 @@ export default function Navbar() {
             <Link href="/explore">EXPLORE</Link>
             <Link href="/interactives">INTERACTIVES</Link>
             <Link href="/articles">ARTICLES</Link>
-            <button onClick={cycleTheme}>CHANGE SKIN</button>
 
             {!user ? (
               <button onClick={openLogin}>LOGIN</button>
@@ -122,15 +109,6 @@ export default function Navbar() {
             <Link href="/articles" onClick={handleMobileLinkClick}>
               ARTICLES
             </Link>
-
-            <button
-              onClick={() => {
-                cycleTheme();
-                handleMobileLinkClick();
-              }}
-            >
-              CHANGE SKIN
-            </button>
 
             {!user ? (
               <button

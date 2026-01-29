@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/app/(providers)/auth-provider";
 import Image from "next/image";
 import Container from "@/components/ui/Container";
-import LoadingSketch from "@/components/p5/loading/LoadingSketch";
 import Link from "next/link";
 import styles from "./ArticlePage.module.css";
 import AudioPlaylistPlayer from "./AudioPlaylistPlayer";
@@ -100,7 +99,36 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
     setVideoReady(article.videos.length === 0);
   }, [article]);
 
-  if (isLoading) return <LoadingSketch />;
+  if (isLoading) {
+    return (
+      <div className={styles["article-layout"]}>
+        <div className={styles["gallery-container"]}>
+          <div className={styles["gallery-skeleton"]}>
+            <div className={styles["skeleton-block"]} />
+          </div>
+        </div>
+
+        <Container className={styles["content-wrapper"]}>
+          <div className={styles["header-row"]}>
+            <div className={styles["skeleton-line"]} />
+            <div className={styles["skeleton-title"]} />
+            <div className={styles["skeleton-line"]} />
+          </div>
+
+          <div className={styles["main-content"]}>
+            <div className={styles["content-inner"]}>
+              <div className={styles["audio-skeleton"]}>
+                <div className={styles["skeleton-row"]} />
+                <div className={styles["skeleton-wave"]} />
+                <span className={styles["skeleton-label"]}>Loading audio…</span>
+              </div>
+              <div className={styles["skeleton-video"]} />
+            </div>
+          </div>
+        </Container>
+      </div>
+    );
+  }
 
   if (error || !article) {
     return (
@@ -117,7 +145,7 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
     );
   }
 
-  const imagesReady = article.images.length === 0 || imagesLoaded >= article.images.length;
+  const imagesReady = article.images.length === 0 || imagesLoaded > 0;
   const mediaReady = imagesReady && audioReady && videoReady;
 
   return (
@@ -143,6 +171,9 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
                   className={styles["gallery-image"]}
                   priority={idx === 0}
                   onLoadingComplete={() => {
+                    setImagesLoaded((count) => count + 1);
+                  }}
+                  onError={() => {
                     setImagesLoaded((count) => count + 1);
                   }}
                 />

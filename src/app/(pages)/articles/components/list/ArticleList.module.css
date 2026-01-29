@@ -5,7 +5,7 @@
   font-family: "IBM Plex Sans", sans-serif;
   color: var(--text-color);
   min-height: 100vh;
-  padding: 10vw 3vw 7vw 3vw;
+  padding-top: 2rem;
 }
 
 .articles-create-button {

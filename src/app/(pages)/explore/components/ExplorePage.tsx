@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./ExplorePage.module.css";
@@ -18,64 +18,40 @@ type Article = {
 
 type ExploreData = {
   articles: Article[];
-  recentArticles: Article[];
 };
 
 const EXPLORE_QUERY = `
-  query Explore($limit: Int!, $recentLimit: Int!) {
-    articles(limit: $limit) {
+  query Explore($limit: Int!, $offset: Int!) {
+    articles(limit: $limit, offset: $offset) {
       id
       title
-      artist
-      content
-      authorUid
-      createdAt
-      images
-    }
-    recentArticles(limit: $recentLimit) {
-      id
-      title
-      artist
-      content
-      authorUid
-      createdAt
       images
     }
   }
 `;
-
-const excerpt = (text?: string | null, max = 140) => {
-  if (!text) return "";
-  const trimmed = text.trim();
-  if (trimmed.length <= max) return trimmed;
-  return `${trimmed.slice(0, max).trim()}…`;
-};
-
-const formatDate = (value?: string | null) => {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString();
-};
+const PAGE_SIZE = 10;
 
 const ExplorePage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [recentArticles, setRecentArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
         const data = await fetchGraphQL<ExploreData>(EXPLORE_QUERY, {
-          limit: 48,
-          recentLimit: 8,
+          limit: PAGE_SIZE,
+          offset: 0,
         });
-        setArticles(data.articles ?? []);
-        setRecentArticles(data.recentArticles ?? []);
+        const first = data.articles ?? [];
+        setArticles(first);
+        setHasMore(first.length === PAGE_SIZE);
       } catch (err: any) {
         console.error(err);
-        setError(err.message ?? "No se pudo cargar explore.");
+        setError(err.message ?? "Unable to load explore.");
       } finally {
         setIsLoading(false);
       }
@@ -84,18 +60,47 @@ const ExplorePage = () => {
     load();
   }, []);
 
-  const hasRecent = recentArticles.length;
-  const hasAll = articles.length;
-
-  const emptyRecent = !hasRecent && !isLoading;
-  const emptyAll = !hasAll && !isLoading;
-
   const allArticleList = useMemo(() => articles, [articles]);
+
+  const loadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const data = await fetchGraphQL<ExploreData>(EXPLORE_QUERY, {
+        limit: PAGE_SIZE,
+        offset: articles.length,
+      });
+      const next = data.articles ?? [];
+      setArticles((prev) => [...prev, ...next]);
+      setHasMore(next.length === PAGE_SIZE);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message ?? "Unable to load more.");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!loaderRef.current) return;
+    const target = loaderRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: "200px 0px" }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [loadMore, hasMore, isLoadingMore, articles.length]);
 
   if (isLoading) {
     return (
       <div className={styles["explore-container"]}>
-        <div className={styles["explore-loading"]}>Cargando explore…</div>
+        <div className={styles["explore-loading"]}>Loading explore…</div>
       </div>
     );
   }
@@ -112,141 +117,54 @@ const ExplorePage = () => {
     <div className={styles["explore-container"]}>
       <div className={styles["explore-header"]}>
         <h1>Explore</h1>
-        <p>Articulos de toda la comunidad.</p>
+        <p>Latest articles from every profile.</p>
       </div>
+      <div className={styles["explore-divider"]} />
 
       <section className={styles["explore-section"]}>
-        <div className={styles["explore-section-header"]}>
-          <h2>Recientes</h2>
-          <span>Lo ultimo publicado</span>
-        </div>
-
-        {emptyRecent && (
-          <div className={styles["explore-empty"]}>
-            Todavia no hay publicaciones recientes.
-          </div>
-        )}
-
-        {!!recentArticles.length && (
-          <>
-            <h3 className={styles["explore-subtitle"]}>Articulos</h3>
-            <div className={styles["explore-grid"]}>
-              {recentArticles.map((article) => (
-                <div key={`recent-article-${article.id}`} className={styles["explore-card"]}>
-                  <Link
-                    href={`/articles/${article.id}`}
-                    className={styles["explore-card-media-link"]}
-                  >
-                    <div className={styles["explore-card-image"]}>
-                      {article.images?.[0] ? (
-                        <Image
-                          src={article.images[0]}
-                          alt={article.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                        />
-                      ) : (
-                        <div className={styles["explore-card-placeholder"]}>
-                          Sin imagen
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                  <div className={styles["explore-card-body"]}>
-                    <Link
-                      href={`/articles/${article.id}`}
-                      className={styles["explore-card-title-link"]}
-                    >
-                      <div className={styles["explore-card-title"]}>{article.title}</div>
-                    </Link>
-                    {article.artist && (
-                      <div className={styles["explore-card-meta"]}>{article.artist}</div>
-                    )}
-                    <p className={styles["explore-card-text"]}>
-                      {excerpt(article.content)}
-                    </p>
-                    <div className={styles["explore-card-footer"]}>
-                      <span>{formatDate(article.createdAt)}</span>
-                      <Link
-                        href={`/profile/${article.authorUid}`}
-                        className={styles["explore-card-link"]}
-                      >
-                        Ver perfil
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-      </section>
-
-      <section className={styles["explore-section"]}>
-        <div className={styles["explore-section-header"]}>
-          <h2>Todo</h2>
-          <span>Explora cada perfil</span>
-        </div>
-
-        {emptyAll && (
-          <div className={styles["explore-empty"]}>No hay contenido todavia.</div>
+        {allArticleList.length === 0 && (
+          <div className={styles["explore-empty"]}>No articles yet.</div>
         )}
 
         {!!allArticleList.length && (
-          <>
-            <h3 className={styles["explore-subtitle"]}>Articulos</h3>
-            <div className={styles["explore-grid"]}>
-              {allArticleList.map((article) => (
-                <div key={`article-${article.id}`} className={styles["explore-card"]}>
-                  <Link
-                    href={`/articles/${article.id}`}
-                    className={styles["explore-card-media-link"]}
-                  >
-                    <div className={styles["explore-card-image"]}>
-                      {article.images?.[0] ? (
-                        <Image
-                          src={article.images[0]}
-                          alt={article.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                        />
-                      ) : (
-                        <div className={styles["explore-card-placeholder"]}>
-                          Sin imagen
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                  <div className={styles["explore-card-body"]}>
-                    <Link
-                      href={`/articles/${article.id}`}
-                      className={styles["explore-card-title-link"]}
-                    >
-                      <div className={styles["explore-card-title"]}>{article.title}</div>
-                    </Link>
-                    {article.artist && (
-                      <div className={styles["explore-card-meta"]}>{article.artist}</div>
+          <div className={styles["explore-grid"]}>
+            {allArticleList.map((article) => (
+              <div key={`article-${article.id}`} className={styles["explore-card"]}>
+                <Link
+                  href={`/articles/${article.id}`}
+                  className={styles["explore-card-media-link"]}
+                >
+                  <div className={styles["explore-card-image"]}>
+                    {article.images?.[0] ? (
+                      <Image
+                        src={article.images[0]}
+                        alt={article.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    ) : (
+                      <div className={styles["explore-card-placeholder"]}>
+                        No image
+                      </div>
                     )}
-                    <p className={styles["explore-card-text"]}>
-                      {excerpt(article.content)}
-                    </p>
-                    <div className={styles["explore-card-footer"]}>
-                      <span>{formatDate(article.createdAt)}</span>
-                      <Link
-                        href={`/profile/${article.authorUid}`}
-                        className={styles["explore-card-link"]}
-                      >
-                        Ver perfil
-                      </Link>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </>
+                  <div className={styles["explore-card-body"]}>
+                    <div className={styles["explore-card-title"]}>{article.title}</div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
         )}
 
+        {hasMore && (
+          <div ref={loaderRef} className={styles["explore-loader"]}>
+            {isLoadingMore ? "Loading more…" : "Scroll to load more"}
+          </div>
+        )}
+        {!hasMore && allArticleList.length > 0 && (
+          <div className={styles["explore-loader"]}>End of list</div>
+        )}
       </section>
     </div>
   );

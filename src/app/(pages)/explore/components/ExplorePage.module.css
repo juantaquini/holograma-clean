@@ -1,10 +1,10 @@
 .explore-container {
   width: 100%;
-  max-width: 1200px;
-  padding: 32px 18px 80px;
+  padding: 8vw 3vw 8vw 3vw;
   display: flex;
   flex-direction: column;
   gap: 32px;
+  position: relative;
 }
 
 .explore-header {
@@ -20,33 +20,21 @@
 
 .explore-header p {
   color: var(--text-color-secondary);
+  letter-spacing: 0.4px;
+}
+
+.explore-divider {
+  width: 100%;
+  height: 1px;
+  border-top: 2px dashed var(--border-color);
 }
 
 .explore-section {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.explore-section-header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.explore-section-header h2 {
-  font-size: 24px;
-}
-
-.explore-section-header span {
-  color: var(--text-color-secondary);
-  font-size: 14px;
-}
-
-.explore-subtitle {
-  margin-top: 12px;
-  font-size: 18px;
-  letter-spacing: 0.5px;
+  border-radius: 16px;
+  padding: 20px;
 }
 
 .explore-grid {
@@ -56,10 +44,10 @@
 }
 
 .explore-card {
-  border: 1px solid var(--border-color);
+  border: 2px dashed var(--text-color);
   border-radius: 14px;
   overflow: hidden;
-  background: var(--lighter-bg-color);
+  background: transparent;
   color: inherit;
   display: flex;
   flex-direction: column;
@@ -75,11 +63,11 @@
   position: relative;
   width: 100%;
   height: 170px;
-  background: var(--bg-color);
+  background: transparent;
 }
 
 .explore-card-image img {
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .explore-card-media-link {
@@ -107,37 +95,13 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  text-align: center;
 }
 
 .explore-card-title {
   font-size: 16px;
   font-weight: 600;
-}
-
-.explore-card-meta {
-  color: var(--text-color-secondary);
-  font-size: 13px;
-}
-
-.explore-card-text {
-  font-size: 13px;
-  color: var(--text-color-secondary);
-  min-height: 48px;
-}
-
-.explore-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 12px;
-  color: var(--text-color-secondary);
-}
-
-.explore-card-link {
-  color: var(--text-color);
-  font-size: 12px;
-  text-decoration: underline;
+  letter-spacing: 0.4px;
 }
 
 .explore-loading,
@@ -148,6 +112,15 @@
   border-radius: 12px;
   text-align: center;
   color: var(--text-color-secondary);
+}
+
+.explore-loader {
+  text-align: center;
+  color: var(--text-color-secondary);
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 12px 0;
 }
 
 @media (max-width: 720px) {

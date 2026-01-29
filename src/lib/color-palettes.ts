@@ -14,23 +14,13 @@ export type ColorPalette = {
 };
 
 export const colorPalettes: Record<string, ColorPalette> = {
-  marronCeleste: {
-    background: "#2D1E14",
-    text: "#9fe8fc",
-    text_secondary: "#F7B267",
-    border: "#006064",
-    colors: ["#8D6E63", "#84FFFF", "#3E2723"],
-    lighter_bg: "#6f5149",
-    button: "#006064",
-    SketchComponent: BrownBackgroundSketch
-  },
   azulMagenta: {
-    background: "#10154fff",
+    background: "#040410ff",
     lighter_bg: "#303F9F",
     text: "#F8EAF6",
     text_secondary: "#FFB3B3",
     border: "#E91E63",
-    button: "#EC8200",
+    button: "#E91E63",
     opacity_neutral: "#f8eaf699"
   },
   whitesmokeAzul: {
