@@ -1,42 +1,32 @@
-.explore-container {
+.feed-container {
   width: 100%;
-  padding: 3vw 0vw 3vw 0vw;
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  position: relative;
+  gap: 28px;
 }
 
-.explore-header {
+.feed-header {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.explore-header h1 {
-  font-size: 36px;
-  letter-spacing: 0.6px;
+.feed-header h1 {
+  font-size: 32px;
 }
 
-.explore-header p {
+.feed-header p {
   color: var(--text-color-secondary);
-  letter-spacing: 0.4px;
 }
 
-.explore-section {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.explore-section-title {
+.feed-meta {
   font-size: 12px;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
   color: var(--text-color-secondary);
 }
 
-.explore-grid {
+.feed-grid {
   display: grid;
   column-gap: 18px;
   row-gap: 18px;
@@ -44,41 +34,70 @@
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
-.explore-card {
+.feed-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.feed-section {
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feed-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.feed-section-header h2 {
+  font-size: 18px;
+  letter-spacing: 0.4px;
+}
+
+.feed-section-link {
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 12px;
+  letter-spacing: 0.4px;
+}
+
+.feed-section-link:hover {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 4px;
+}
+
+.feed-card {
   overflow: hidden;
+  text-decoration: none;
   color: inherit;
   display: flex;
   flex-direction: column;
   transition: opacity 0.2s ease;
 }
 
-.explore-card:hover {
+.feed-card:hover {
   opacity: 0.8;
 }
 
-.explore-card-image {
+.feed-card-image {
   position: relative;
   width: 100%;
-  height: 170px;
-  background: transparent;
+  height: 200px;
 }
 
-.explore-card-image img {
+.feed-card-image img {
   object-fit: contain;
   object-position: left top;
 }
 
-.explore-card-media-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.explore-card-title-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.explore-card-placeholder {
+.feed-card-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,22 +107,18 @@
   letter-spacing: 0.5px;
 }
 
-.explore-card-body {
-  padding: 12px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.feed-card-body {
+  padding: 10px 0 0;
   text-align: left;
 }
 
-.explore-card-title {
+.feed-card-title {
   font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
   color: var(--text-color-secondary);
 }
 
-.explore-channel-placeholder {
+.feed-channel-placeholder {
   width: 100%;
   height: 100%;
   border: 1px solid var(--text-color);
@@ -116,52 +131,43 @@
   padding: 12px;
 }
 
-.explore-channel-title {
+.feed-channel-title {
   font-size: 14px;
   letter-spacing: 0.3px;
   color: var(--text-color);
 }
 
-.explore-channel-by {
+.feed-channel-by {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--text-color-secondary);
 }
 
-.explore-channel-user {
+.feed-channel-user {
   font-size: 12px;
   letter-spacing: 0.3px;
   color: var(--text-color-secondary);
 }
 
-.explore-loading,
-.explore-error,
-.explore-empty {
+.feed-loading,
+.feed-error,
+.feed-empty {
   padding: 20px;
   text-align: center;
   color: var(--text-color-secondary);
 }
 
-.explore-loader {
-  text-align: center;
-  color: var(--text-color-secondary);
-  font-size: 12px;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  padding: 12px 0;
-}
-
 @media (max-width: 720px) {
-  .explore-container {
+  .feed-container {
     padding: 24px 14px 60px;
   }
 
-  .explore-header h1 {
-    font-size: 30px;
+  .feed-header h1 {
+    font-size: 28px;
   }
 
-  .explore-card-image {
-    height: 150px;
+  .feed-card-image {
+    height: 170px;
   }
 }

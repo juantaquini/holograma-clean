@@ -16,6 +16,7 @@ import styles from "./ArticleForm.module.css";
 
 interface ArticleFormProps {
   mode: "create" | "edit";
+  channelId?: string | null;
   article?: {
     id: string;
     title: string;
@@ -35,7 +36,7 @@ interface FormDataType {
   content: string;
 }
 
-export default function ArticleForm({ mode, article }: ArticleFormProps) {
+export default function ArticleForm({ mode, article, channelId }: ArticleFormProps) {
   const router = useRouter();
   const { user } = useAuth();
 
@@ -106,6 +107,9 @@ export default function ArticleForm({ mode, article }: ArticleFormProps) {
 
       if (mode === "create") {
         formData.append("author_uid", user.uid);
+        if (channelId) {
+          formData.append("channel_id", channelId);
+        }
       }
 
       removed.forEach((id) => {

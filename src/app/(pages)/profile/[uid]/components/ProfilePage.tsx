@@ -93,23 +93,25 @@ const ProfilePage = ({ uid }: { uid: string }) => {
   return (
     <div className={styles["profile-container"]}>
       <header className={styles["profile-header"]}>
-        <h1>Perfil</h1>
-        <div className={styles["profile-uid"]}>{uid}</div>
-        <p>Articulos publicados por este perfil.</p>
+        <div className={styles["profile-title-row"]}>
+          <div className={styles["profile-actions"]}>
+            <Link href="/channels/create" className={styles["profile-feed-link"]}>
+              Create channel
+            </Link>
+            <Link href={`/feed/${uid}`} className={styles["profile-feed-link"]}>
+              View public feed
+            </Link>
+          </div>
+        </div>
       </header>
-
       {!hasContent && (
         <div className={styles["profile-empty"]}>
-          Aun no hay contenido para este perfil.
+          No uploads yet.
         </div>
       )}
 
       {!!articles.length && (
         <section className={styles["profile-section"]}>
-          <div className={styles["profile-section-header"]}>
-            <h2>Articulos</h2>
-            <span>{articles.length}</span>
-          </div>
           <div className={styles["profile-grid"]}>
             {articles.map((article) => (
               <Link
@@ -127,22 +129,12 @@ const ProfilePage = ({ uid }: { uid: string }) => {
                     />
                   ) : (
                     <div className={styles["profile-card-placeholder"]}>
-                      Sin imagen
+                      No image
                     </div>
                   )}
                 </div>
                 <div className={styles["profile-card-body"]}>
                   <div className={styles["profile-card-title"]}>{article.title}</div>
-                  {article.artist && (
-                    <div className={styles["profile-card-meta"]}>{article.artist}</div>
-                  )}
-                  <p className={styles["profile-card-text"]}>
-                    {excerpt(article.content)}
-                  </p>
-                  <div className={styles["profile-card-footer"]}>
-                    <span>{formatDate(article.createdAt)}</span>
-                    <span>UID: {article.authorUid}</span>
-                  </div>
                 </div>
               </Link>
             ))}

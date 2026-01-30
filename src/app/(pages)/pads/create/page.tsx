@@ -1,4 +1,4 @@
-import ArticleForm from "../components/form/ArticleForm";
+import CreatePadPage from "./components/CreatePadPage";
 
 type PageProps = {
   searchParams?: Promise<{ channelId?: string }>;
@@ -6,5 +6,5 @@ type PageProps = {
 
 export default async function Page({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  return <ArticleForm mode="create" channelId={params.channelId ?? null} />;
+  return <CreatePadPage channelId={params.channelId ?? null} />;
 }

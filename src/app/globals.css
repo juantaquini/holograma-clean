@@ -89,7 +89,6 @@ button {
   padding: 8vw 3vw 0vw 3vw;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   overflow-y: auto;
   overflow-x: hidden;
   align-items: center;
@@ -98,6 +97,6 @@ button {
 
 @media (max-width: 720px) {
   .app-content {
-    padding: 20vw 3vw 20vw 3vw;
+    padding: 24vw 3vw 20vw 3vw;
   }
 }

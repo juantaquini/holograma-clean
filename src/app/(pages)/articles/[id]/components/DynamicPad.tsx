@@ -10,7 +10,7 @@ interface Props {
   videos?: string[];
 }
 
-const KEYS = [75, 66, 83, 72]; 
+const KEYS = [75, 66, 83, 72, 74, 70, 76, 68]; 
 
 const DynamicPad: React.FC<Props> = ({
   audios,
@@ -24,7 +24,7 @@ const DynamicPad: React.FC<Props> = ({
   const soundOn = useRef<boolean[]>([]);
   const imgs = useRef<any[]>([]);
   const vids = useRef<any[]>([]);
-  const alphaPhase = useRef<number[]>([0, 1, 2, 3]);
+  const alphaPhase = useRef<number[]>([]);
   const activeTouches = useRef<Map<number, number>>(new Map());
   const canvasRef = useRef<any>(null);
   const fadeTimeouts = useRef<any[]>([]);
@@ -140,7 +140,7 @@ const DynamicPad: React.FC<Props> = ({
   const preload = (p5: any) => {
     console.log("🔄 Preloading assets...");
     
-    audios.slice(0, 4).forEach((src, i) => {
+    audios.forEach((src, i) => {
       try {
         sounds.current[i] = p5.loadSound(
           src,
@@ -148,6 +148,7 @@ const DynamicPad: React.FC<Props> = ({
           (err: any) => console.error(`❌ Error loading audio ${i}:`, err)
         );
         soundOn.current[i] = false;
+        alphaPhase.current[i] = i;
       } catch (err) {
         console.error(`❌ Error loading sound ${i}:`, err);
       }
@@ -275,14 +276,18 @@ const DynamicPad: React.FC<Props> = ({
     if (!isInsideCanvas(touch, canvas)) return -1;
 
     const rect = canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left - rect.width / 2;
-    const y = touch.clientY - rect.top - rect.height / 2;
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
 
-    if (x < 0 && y < 0) return 0;
-    if (x >= 0 && y < 0) return 1;
-    if (x < 0 && y >= 0) return 2;
-    if (x >= 0 && y >= 0) return 3;
-    return -1;
+    const padCount = Math.max(1, sounds.current.length);
+    const cols = Math.ceil(Math.sqrt(padCount));
+    const rows = Math.ceil(padCount / cols);
+    const cellW = rect.width / cols;
+    const cellH = rect.height / rows;
+    const col = Math.min(cols - 1, Math.floor(x / cellW));
+    const row = Math.min(rows - 1, Math.floor(y / cellH));
+    const idx = row * cols + col;
+    return idx < padCount ? idx : -1;
   };
 
   const handleTouchStart = (e: TouchEvent) => {
@@ -379,15 +384,26 @@ const DynamicPad: React.FC<Props> = ({
     }
 
     if (!isMobile) {
-      KEYS.forEach((k, i) => {
-        toggle(i, p5.keyIsDown(k));
-      });
+      const padCount = Math.max(1, sounds.current.length);
+      for (let i = 0; i < padCount; i++) {
+        const keyCode = KEYS[i];
+        if (!keyCode) continue;
+        toggle(i, p5.keyIsDown(keyCode));
+      }
     }
 
-    for (let i = 0; i < 4; i++) {
+    const padCount = Math.max(1, sounds.current.length);
+    const cols = Math.ceil(Math.sqrt(padCount));
+    const rows = Math.ceil(padCount / cols);
+    const cellW = p5.width / cols;
+    const cellH = p5.height / rows;
+
+    for (let i = 0; i < padCount; i++) {
       const hasSound = soundOn.current[i];
-      const x = (i % 2 === 0 ? -1 : 1) * (p5.width / 4);
-      const y = (i < 2 ? -1 : 1) * (p5.height / 4);
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = -p5.width / 2 + cellW * col + cellW / 2;
+      const y = -p5.height / 2 + cellH * row + cellH / 2;
 
       p5.push();
       p5.translate(x, y);
@@ -399,9 +415,7 @@ const DynamicPad: React.FC<Props> = ({
           const alpha = 80 + p5.sin(alphaPhase.current[i]) * 80;
           p5.tint(255, alpha);
 
-          const quadW = p5.width / 2;
-          const quadH = p5.height / 2;
-          const scale = Math.min(quadW / img.width, quadH / img.height) * 0.85;
+          const scale = Math.min(cellW / img.width, cellH / img.height) * 0.85;
 
           p5.image(
             img,
@@ -537,54 +551,37 @@ const DynamicPad: React.FC<Props> = ({
             </svg>
             {!isMobile && (
               <>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "10%",
-                    left: "12%",
-                    fontSize: "12px",
-                    color: palette.text_secondary,
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  K
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "10%",
-                    right: "12%",
-                    fontSize: "12px",
-                    color: palette.text_secondary,
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  B
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "10%",
-                    left: "12%",
-                    fontSize: "12px",
-                    color: palette.text_secondary,
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  S
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "10%",
-                    right: "12%",
-                    fontSize: "12px",
-                    color: palette.text_secondary,
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  H
-                </div>
+                {(() => {
+                  const padCount = Math.max(1, sounds.current.length);
+                  const cols = Math.ceil(Math.sqrt(padCount));
+                  const rows = Math.ceil(padCount / cols);
+                  const cells = Array.from({ length: padCount });
+                  return cells.map((_, i) => {
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    const x = ((col + 0.5) / cols) * 100;
+                    const y = ((row + 0.5) / rows) * 100;
+                    const key = KEYS[i]
+                      ? String.fromCharCode(KEYS[i])
+                      : "";
+                    return (
+                      <div
+                        key={`key-${i}`}
+                        style={{
+                          position: "absolute",
+                          left: `${x}%`,
+                          top: `${y}%`,
+                          transform: "translate(-50%, -50%)",
+                          fontSize: "12px",
+                          color: palette.text_secondary,
+                          letterSpacing: "0.4px",
+                        }}
+                      >
+                        {key}
+                      </div>
+                    );
+                  });
+                })()}
               </>
             )}
             {isMobile && (

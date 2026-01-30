@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
-import { FiMenu, FiX } from "react-icons/fi";
+import { FiX } from "react-icons/fi";
 import { usePopup } from "@/app/(providers)/popup-provider";
 import { useAuth } from "@/app/(providers)/auth-provider";
 import Login from "@/components/auth/Login";
@@ -13,15 +13,13 @@ import Signin from "@/components/auth/Signin";
 const isMobile = () => window.innerWidth <= 1000;
 
 export default function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { openPopup, closePopup } = usePopup();
   const auth = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-
-  const isCalm = pathname?.includes("calm");
 
   if (!auth) {
     throw new Error("Navbar must be used inside AuthContextProvider");
@@ -33,12 +31,16 @@ export default function Navbar() {
     const onResize = () => {
       const mobile = isMobile();
       setIsMobileView(mobile);
-      if (!mobile) setMobileMenuOpen(false);
+      if (!mobile) setMenuOpen(false);
     };
     window.addEventListener("resize", onResize);
     onResize();
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   /* ---------------- POPUPS ---------------- */
 
@@ -56,7 +58,20 @@ export default function Navbar() {
     router.push("/");
   };
 
-  const handleMobileLinkClick = () => setMobileMenuOpen(false);
+  const handleLinkClick = () => setMenuOpen(false);
+
+  const initials = useMemo(() => {
+    const name = user?.displayName?.trim();
+    if (name) {
+      const parts = name.split(" ").filter(Boolean);
+      return parts.length === 1
+        ? parts[0].slice(0, 2).toUpperCase()
+        : `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    const email = user?.email?.split("@")[0] ?? "";
+    if (email) return email.slice(0, 2).toUpperCase();
+    return "U";
+  }, [user?.displayName, user?.email]);
 
   /* ---------------- RENDER ---------------- */
 
@@ -69,10 +84,10 @@ export default function Navbar() {
           </Link>
 
           <button
-            className={styles["navbar-hamburger"]}
-            onClick={() => setMobileMenuOpen((o) => !o)}
+            className={styles["navbar-avatar"]}
+            onClick={() => setMenuOpen((o) => !o)}
           >
-            {mobileMenuOpen ? <FiX size={32} /> : <FiMenu size={28} />}
+            {user ? initials : "LOG"}
           </button>
         </div>
       )}
@@ -83,54 +98,77 @@ export default function Navbar() {
             HOLOGRAMA
           </Link>
 
-          <div className={styles["navbar-links"]}>
-            <Link href="/explore">EXPLORE</Link>
-            <Link href="/interactives">INTERACTIVES</Link>
-            <Link href="/articles">ARTICLES</Link>
-
-            {!user ? (
-              <button onClick={openLogin}>LOGIN</button>
-            ) : (
-              <button onClick={handleLogout}>LOGOUT</button>
-            )}
-          </div>
+          <button
+            className={styles["navbar-avatar"]}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            {user ? initials : "LOG"}
+          </button>
         </nav>
       )}
 
-      {isMobileView && mobileMenuOpen && (
-        <div className={styles["navbar-mobile-menu"]}>
-          <div className={styles["navbar-mobile-column-links"]}>
-            <Link href="/explore" onClick={handleMobileLinkClick}>
-              EXPLORE
-            </Link>
-            <Link href="/interactives" onClick={handleMobileLinkClick}>
-              INTERACTIVES
-            </Link>
-            <Link href="/articles" onClick={handleMobileLinkClick}>
-              ARTICLES
-            </Link>
+      {menuOpen && (
+        <>
+          <div
+            className={styles["navbar-overlay"]}
+            onClick={() => setMenuOpen(false)}
+          />
+          <aside className={styles["navbar-sidebar"]}>
+            <div className={styles["navbar-sidebar-header"]}>
+              <span>{user ? initials : "Welcome"}</span>
+              <button
+                className={styles["navbar-sidebar-close"]}
+                onClick={() => setMenuOpen(false)}
+              >
+                <FiX size={20} />
+              </button>
+            </div>
 
-            {!user ? (
-              <button
-                onClick={() => {
-                  handleMobileLinkClick();
-                  openLogin();
-                }}
-              >
-                LOGIN
-              </button>
-            ) : (
-              <button
-                onClick={async () => {
-                  handleMobileLinkClick();
-                  await handleLogout();
-                }}
-              >
-                LOGOUT
-              </button>
-            )}
-          </div>
-        </div>
+            <div className={styles["navbar-sidebar-links"]}>
+              <Link href="/explore" onClick={handleLinkClick}>
+                Explore
+              </Link>
+              <Link href="/articles" onClick={handleLinkClick}>
+                Articles
+              </Link>
+              {user?.uid && (
+                <>
+                  <Link href={`/feed/${user.uid}`} onClick={handleLinkClick}>
+                    Your feed
+                  </Link>
+                  <Link href={`/profile/${user.uid}`} onClick={handleLinkClick}>
+                    Profile settings
+                  </Link>
+                  <Link href="/channels/create" onClick={handleLinkClick}>
+                    Create channel
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <div className={styles["navbar-sidebar-footer"]}>
+              {!user ? (
+                <button
+                  onClick={() => {
+                    handleLinkClick();
+                    openLogin();
+                  }}
+                >
+                  Log in
+                </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    handleLinkClick();
+                    await handleLogout();
+                  }}
+                >
+                  Log out
+                </button>
+              )}
+            </div>
+          </aside>
+        </>
       )}
     </>
   );

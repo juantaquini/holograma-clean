@@ -93,6 +93,7 @@ export async function POST(req: Request) {
     const artist = formData.get("artist") as string;
     const content = formData.get("content") as string;
     const author_uid = formData.get("author_uid") as string;
+    const channel_id = formData.get("channel_id") as string;
 
     if (!title || !author_uid) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -109,6 +110,7 @@ export async function POST(req: Request) {
         artist,
         content,
         author_uid,
+        channel_id: channel_id || null,
       })
       .select()
       .single();

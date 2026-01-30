@@ -1,0 +1,53 @@
+.pad-create-container {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pad-create-header h1 {
+  font-size: 30px;
+}
+
+.pad-create-header p {
+  color: var(--text-color-secondary);
+}
+
+.pad-create-form {
+  border: 2px dashed var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pad-create-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.pad-create-button {
+  border: 1px dashed var(--border-color);
+  background: transparent;
+  color: var(--text-color);
+  padding: 12px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.pad-create-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .pad-create-container {
+    padding: 24px 14px 60px;
+  }
+}

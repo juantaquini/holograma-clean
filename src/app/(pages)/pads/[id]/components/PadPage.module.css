@@ -1,0 +1,40 @@
+.pad-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pad-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pad-header h1 {
+  font-size: 28px;
+}
+
+.pad-header span {
+  color: var(--text-color-secondary);
+  font-size: 13px;
+}
+
+.pad-loading,
+.pad-error {
+  padding: 20px;
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--text-color-secondary);
+}
+
+.pad-link {
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}

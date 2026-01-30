@@ -1,0 +1,43 @@
+.subnav {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.subnav-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.subnav-link {
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 24px;
+  letter-spacing: 0.4px;
+}
+
+.subnav-link:hover {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 4px;
+}
+
+.subnav-link-disabled {
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  color: var(--text-color-secondary);
+}
+
+.subnav-separator {
+  color: var(--text-color-secondary);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .subnav {
+    margin-top: 80px;
+  }
+}

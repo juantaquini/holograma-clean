@@ -120,7 +120,6 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
               <div className={styles["audio-skeleton"]}>
                 <div className={styles["skeleton-row"]} />
                 <div className={styles["skeleton-wave"]} />
-                <span className={styles["skeleton-label"]}>Loading audio…</span>
               </div>
               <div className={styles["skeleton-video"]} />
             </div>
@@ -156,7 +155,6 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
           {!imagesReady && (
             <div className={styles["gallery-skeleton"]}>
               <div className={styles["skeleton-block"]} />
-              <span className={styles["skeleton-label"]}>Loading media…</span>
             </div>
           )}
           <div className={styles["gallery-scroll"]}>
@@ -214,9 +212,6 @@ const ArticlePage = ({ id }: ArticlePageProps) => {
                   <div className={styles["audio-skeleton"]}>
                     <div className={styles["skeleton-row"]} />
                     <div className={styles["skeleton-wave"]} />
-                    <span className={styles["skeleton-label"]}>
-                      Loading audio…
-                    </span>
                   </div>
                 )}
                 <div
