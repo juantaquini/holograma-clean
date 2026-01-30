@@ -231,7 +231,7 @@ const ExplorePage = () => {
             {channels.map((channel) => (
               <Link
                 key={channel.id}
-                href={`/u/${channel.ownerUid}/${channel.slug}`}
+                href={`/channels/${channel.ownerUid}/${channel.slug}`}
                 className={styles["explore-card"]}
               >
                 <div className={styles["explore-card-image"]}>

@@ -61,3 +61,88 @@ export async function GET(
 
   return NextResponse.json(pad, { status: 200 });
 }
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json({ error: "Pad id is required" }, { status: 400 });
+    }
+
+    const formData = await req.formData();
+    const title = formData.get("title") as string;
+    const channel_id = formData.get("channel_id") as string;
+
+    if (!title) {
+      return NextResponse.json({ error: "Missing title" }, { status: 400 });
+    }
+
+    const { error: updateError } = await supabase
+      .from("sketch")
+      .update({
+        name: title,
+        channel_id: channel_id || null,
+      })
+      .eq("id", id);
+
+    if (updateError) throw updateError;
+
+    const { error: deleteError } = await supabase
+      .from("sketch_media")
+      .delete()
+      .eq("sketch_id", id);
+
+    if (deleteError) throw deleteError;
+
+    const mediaRaw = formData.getAll("media_ids[]") as string[];
+
+    if (mediaRaw.length > 0) {
+      const rows = mediaRaw.map((item, index) => {
+        const { id: mediaId } = JSON.parse(item);
+        return {
+          sketch_id: id,
+          media_id: mediaId,
+          x: 0,
+          y: 0,
+          scale: 1,
+          rotation: 0,
+          opacity: 1,
+          volume: 1,
+          loop: true,
+          blend_mode: "normal",
+          color: null,
+          z_index: index,
+        };
+      });
+
+      const { error: linkError } = await supabase
+        .from("sketch_media")
+        .insert(rows);
+
+      if (linkError) throw linkError;
+
+      const mediaIds = rows.map((r) => r.media_id);
+      const { error: mediaUpdateError } = await supabase
+        .from("media")
+        .update({
+          status: "ready",
+          session_id: null,
+        })
+        .in("id", mediaIds);
+
+      if (mediaUpdateError) throw mediaUpdateError;
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err: any) {
+    console.error("❌ UPDATE PAD ERROR:", err);
+    return NextResponse.json(
+      { error: err.message ?? "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

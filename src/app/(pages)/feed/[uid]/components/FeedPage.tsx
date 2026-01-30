@@ -212,7 +212,7 @@ const FeedPage = ({ uid }: { uid: string }) => {
             {channels.map((channel) => (
               <Link
                 key={channel.id}
-                href={`/u/${channel.ownerUid}/${channel.slug}`}
+                href={`/channels/${channel.ownerUid}/${channel.slug}`}
                 className={styles["feed-card"]}
               >
                 <div className={styles["feed-card-image"]}>
@@ -254,7 +254,7 @@ const FeedPage = ({ uid }: { uid: string }) => {
                 <h2>Articles · {section.title}</h2>
                 {section.slug && section.ownerUid && (
                   <Link
-                    href={`/u/${section.ownerUid}/${section.slug}`}
+                    href={`/channels/${section.ownerUid}/${section.slug}`}
                     className={styles["feed-section-link"]}
                   >
                     Open channel
@@ -299,7 +299,7 @@ const FeedPage = ({ uid }: { uid: string }) => {
                 <h2>Pads · {section.title}</h2>
                 {section.slug && section.ownerUid && (
                   <Link
-                    href={`/u/${section.ownerUid}/${section.slug}`}
+                    href={`/channels/${section.ownerUid}/${section.slug}`}
                     className={styles["feed-section-link"]}
                   >
                     Open channel

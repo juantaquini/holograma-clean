@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./PadPage.module.css";
 import DynamicPad from "@/app/(pages)/articles/[id]/components/DynamicPad";
+import { useAuth } from "@/app/(providers)/auth-provider";
 
 type Pad = {
   id: string;
@@ -16,6 +17,7 @@ type Pad = {
 };
 
 export default function PadPage({ id }: { id: string }) {
+  const { user } = useAuth();
   const [pad, setPad] = useState<Pad | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +62,11 @@ export default function PadPage({ id }: { id: string }) {
     <div className={styles["pad-container"]}>
       <header className={styles["pad-header"]}>
         <h4>{pad.title}</h4>
+        {user?.uid === pad.ownerUid && (
+          <Link className={styles["pad-link"]} href={`/pads/${pad.id}/edit`}>
+            Edit pad
+          </Link>
+        )}
       </header>
 
       <DynamicPad audios={pad.audios} images={pad.images} videos={pad.videos} />

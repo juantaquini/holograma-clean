@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./ChannelPage.module.css";
 import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
+import { useAuth } from "@/app/(providers)/auth-provider";
 
 type Channel = {
   id: string;
@@ -81,6 +82,7 @@ const PADS_QUERY = `
 `;
 
 const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string }) => {
+  const { user } = useAuth();
   const [channel, setChannel] = useState<Channel | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [pads, setPads] = useState<Pad[]>([]);
@@ -126,9 +128,6 @@ const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string })
     load();
   }, [uid, channelSlug]);
 
-  const ownerName =
-    channel?.owner?.displayName || channel?.owner?.uid || channel?.ownerUid || uid;
-
   const items = useMemo(() => articles, [articles]);
   const padItems = useMemo(() => pads, [pads]);
 
@@ -168,6 +167,14 @@ const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string })
           >
             Create pad
           </Link>
+          {user?.uid === channel.ownerUid && (
+            <Link
+              className={styles["channel-action"]}
+              href={`/channels/${channel.ownerUid}/${channel.slug}/edit`}
+            >
+              Edit channel
+            </Link>
+          )}
           <div className={styles["channel-meta"]}>@{channel.slug}</div>
         </div>
       </header>
