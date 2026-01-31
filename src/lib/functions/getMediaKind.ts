@@ -1,4 +1,4 @@
-import { MediaKind } from "@/types/article";
+import { MediaKind } from "@/types/media";
 
 export function getMediaKind(file: File): MediaKind {
   const mimeType = file.type.toLowerCase();

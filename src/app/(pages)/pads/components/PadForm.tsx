@@ -5,16 +5,22 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/app/(providers)/auth-provider";
 import CustomTextInput from "@/components/inputs/CustomTextInput";
-import { MediaSection } from "@/app/(pages)/articles/components/form/MediaSection";
-import { useArticleMedia } from "@/hooks/useArticleMedia";
-import type { ExistingMedia, MediaKind } from "@/types/article";
+import { MediaSection } from "@/components/media/MediaSection";
+import { usePadMedia } from "@/hooks/usePadMedia";
+import type { ExistingMedia, MediaKind } from "@/types/media";
+import { uploadMedia } from "@/lib/functions/uploadMedia";
 import styles from "@/app/(pages)/pads/create/components/CreatePadPage.module.css";
+import inputStyles from "@/components/inputs/InputStyles.module.css";
 
 type PadResponse = {
   id: string;
   title: string;
   ownerUid: string;
   channelId?: string | null;
+  config?: {
+    backgroundColor?: string;
+    text?: string;
+  } | null;
   media: Array<{ id: string; url: string; kind: MediaKind }>;
 };
 
@@ -40,6 +46,15 @@ export default function PadForm({
   const [pad, setPad] = useState<PadResponse | null>(null);
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
+  const [backgroundColor, setBackgroundColor] = useState("#0b0b0b");
+  const [padText, setPadText] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [recordError, setRecordError] = useState<string | null>(null);
+  const [recordSecondsLeft, setRecordSecondsLeft] = useState(60);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordChunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<number | null>(null);
 
   const sessionIdRef = useRef<string>(crypto.randomUUID());
 
@@ -51,9 +66,10 @@ export default function PadForm({
     setOrder,
     setExisting,
     addFiles,
+    addUploadedMedia,
     removeExisting,
     removeAdded,
-  } = useArticleMedia([], sessionIdRef.current);
+  } = usePadMedia([], sessionIdRef.current);
 
   const {
     register,
@@ -102,6 +118,8 @@ export default function PadForm({
 
         setPad(data);
         reset({ title: data.title });
+        setBackgroundColor(data.config?.backgroundColor ?? "#0b0b0b");
+        setPadText(data.config?.text ?? "");
 
         const initialMedia: ExistingMedia[] = (data.media || []).map(
           (m, index) => ({
@@ -152,6 +170,13 @@ export default function PadForm({
     try {
       const formData = new FormData();
       formData.append("title", data.title);
+      formData.append(
+        "config",
+        JSON.stringify({
+          backgroundColor,
+          text: padText,
+        })
+      );
 
       if (mode === "create") {
         formData.append("owner_uid", user.uid);
@@ -172,7 +197,7 @@ export default function PadForm({
         if (media && media.kind) {
           formData.append(
             "media_ids[]",
-            JSON.stringify({ id: media.id, kind: media.kind })
+            JSON.stringify({ id: media.id })
           );
         }
       });
@@ -205,10 +230,81 @@ export default function PadForm({
     }
   };
 
+  const stopRecording = () => {
+    if (recordTimerRef.current) {
+      window.clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+    }
+  };
+
+  const startRecording = async () => {
+    if (recording) return;
+    setRecordError(null);
+    setRecordSecondsLeft(60);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      recordChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        setRecording(false);
+        setRecordSecondsLeft(60);
+
+        if (!recordChunksRef.current.length) return;
+        const blob = new Blob(recordChunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+        const file = new File([blob], `pad-audio-${Date.now()}.webm`, {
+          type: blob.type,
+        });
+
+        try {
+          const media = await uploadMedia(file, sessionIdRef.current);
+          addUploadedMedia(file, media);
+        } catch (err: any) {
+          setRecordError(err?.message ?? "Upload failed");
+        }
+      };
+
+      recorder.start();
+      setRecording(true);
+      recordTimerRef.current = window.setInterval(() => {
+        setRecordSecondsLeft((prev) => {
+          if (prev <= 1) {
+            stopRecording();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err: any) {
+      setRecordError(err?.message ?? "Mic access denied");
+      setRecording(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopRecording();
+    };
+  }, []);
+
   return (
     <div className={styles["pad-create-container"]}>
       <header className={styles["pad-create-header"]}>
-        <h1>{mode === "create" ? "Create pad for your channel" : "Edit pad"}</h1>
+        <h1>{mode === "create" ? "Create pad" : "Edit pad"}</h1>
         {mode === "edit" && <p>Update media for this pad.</p>}
       </header>
       <form onSubmit={handleSubmit(onSubmit)} className={styles["pad-create-form"]}>
@@ -218,6 +314,59 @@ export default function PadForm({
           register={register}
           error={errors.title}
         />
+
+        <div className={styles["pad-create-grid"]}>
+          <label className={inputStyles["custom-input-container"]}>
+            <span className={inputStyles["custom-input-label"]}>
+              Background color
+            </span>
+            <input
+              className={inputStyles["custom-text-input"]}
+              type="color"
+              value={backgroundColor}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+            />
+          </label>
+          <label className={inputStyles["custom-input-container"]}>
+            <span className={inputStyles["custom-input-label"]}>Text</span>
+            <textarea
+              className={inputStyles["custom-text-area-input"]}
+              value={padText}
+              onChange={(e) => setPadText(e.target.value)}
+              placeholder="Add text to your pad..."
+            />
+          </label>
+        </div>
+
+        <div className={styles["pad-recorder"]}>
+          <div className={styles["pad-recorder-title"]}>Record audio</div>
+          <div className={styles["pad-recorder-actions"]}>
+            <button
+              type="button"
+              className={styles["channel-create-button"]}
+              onClick={startRecording}
+              disabled={recording}
+            >
+              {recording ? "Recording..." : "Start recording"}
+            </button>
+            <button
+              type="button"
+              className={styles["pad-create-button-secondary"]}
+              onClick={stopRecording}
+              disabled={!recording}
+            >
+              Stop
+            </button>
+          </div>
+          <div className={styles["pad-recorder-status"]}>
+            {recording
+              ? `Recording... ${recordSecondsLeft}s left`
+              : "Up to 60 seconds. Tap start to record."}
+          </div>
+          {recordError && (
+            <div className={styles["pad-recorder-status"]}>{recordError}</div>
+          )}
+        </div>
 
         <div className={styles["pad-create-grid"]}>
           <MediaSection
@@ -244,7 +393,7 @@ export default function PadForm({
           />
         </div>
         <MediaSection
-          title="Audios"
+          title="Songs"
           kind={"audio" as MediaKind}
           existing={existing}
           added={added}

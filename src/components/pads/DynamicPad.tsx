@@ -1,24 +1,53 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useColorTheme } from "@/app/(providers)/color-theme-provider";
 import { colorPalettes } from "@/lib/color-palettes";
 
+type PadMedia = {
+  id: string;
+  url: string;
+  kind: "image" | "video" | "audio";
+  x?: number;
+  y?: number;
+  scale?: number;
+  rotation?: number;
+  opacity?: number;
+  volume?: number;
+  loop?: boolean;
+  blendMode?: string;
+  color?: string | null;
+  zIndex?: number;
+};
+
+type PadConfig = {
+  backgroundColor?: string;
+  text?: string;
+};
+
 interface Props {
-  audios: string[];
-  images?: string[];
-  videos?: string[];
+  media: PadMedia[];
+  config?: PadConfig;
 }
 
-const KEYS = [75, 66, 83, 72, 74, 70, 76, 68]; 
+const KEYS = [75, 66, 83, 72, 74, 70, 76, 68];
 
-const DynamicPad: React.FC<Props> = ({
-  audios,
-  images = [],
-  videos = [],
-}) => {
+const DynamicPad: React.FC<Props> = ({ media, config }) => {
   const { theme } = useColorTheme();
   const palette = colorPalettes[theme];
+
+  const audioItems = useMemo(
+    () => media.filter((m) => m.kind === "audio"),
+    [media]
+  );
+  const imageItems = useMemo(
+    () => media.filter((m) => m.kind === "image"),
+    [media]
+  );
+  const videoItems = useMemo(
+    () => media.filter((m) => m.kind === "video"),
+    [media]
+  );
 
   const sounds = useRef<any[]>([]);
   const soundOn = useRef<boolean[]>([]);
@@ -27,6 +56,11 @@ const DynamicPad: React.FC<Props> = ({
   const alphaPhase = useRef<number[]>([]);
   const activeTouches = useRef<Map<number, number>>(new Map());
   const canvasRef = useRef<any>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const recordStreamRef = useRef<MediaStream | null>(null);
+  const audioDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const audioConnectedRef = useRef(false);
   const fadeTimeouts = useRef<any[]>([]);
   const p5Instance = useRef<any>(null);
 
@@ -35,86 +69,82 @@ const DynamicPad: React.FC<Props> = ({
   const [p5SoundLoaded, setP5SoundLoaded] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  const [recordingFilename, setRecordingFilename] = useState<string>(
+    "holograma-dynamic-pad.webm"
+  );
+  const [recordError, setRecordError] = useState<string | null>(null);
 
-  // Cargar p5.sound primero
   useEffect(() => {
     const script = document.createElement("script");
     script.src =
       "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js";
     script.async = true;
     script.onload = () => {
-      console.log("✅ p5.sound loaded");
       setP5SoundLoaded(true);
       import("react-p5").then((mod) => {
-        console.log("✅ react-p5 loaded");
         setSketch(() => mod.default);
       });
     };
-    
     script.onerror = () => {
-      console.error("❌ Failed to load p5.sound");
+      setP5SoundLoaded(false);
     };
-    
     document.body.appendChild(script);
 
     return () => {
-      console.log("🧹 Cleanup: Removing p5.sound script");
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
     };
   }, []);
 
-  // Cleanup completo al desmontar
   useEffect(() => {
     return () => {
-      console.log("🧹 Cleanup: Stopping all sounds and videos");
-      
-      // Limpiar timeouts
-      fadeTimeouts.current.forEach(timeout => {
+      fadeTimeouts.current.forEach((timeout) => {
         if (timeout) clearTimeout(timeout);
       });
       fadeTimeouts.current = [];
-      
-      // Detener y liberar todos los sonidos
-      sounds.current.forEach((sound, i) => {
+
+      sounds.current.forEach((sound) => {
         if (sound) {
           try {
             if (sound.isPlaying && sound.isPlaying()) {
               sound.stop();
             }
-            // Liberar recursos del sonido
             if (sound.disconnect) sound.disconnect();
-          } catch (e) {
-            console.warn(`Error stopping sound ${i}:`, e);
-          }
+          } catch {}
         }
       });
       sounds.current = [];
       soundOn.current = [];
-      
-      // Detener videos
-      vids.current.forEach((vid, i) => {
+
+      vids.current.forEach((vid) => {
         if (vid && vid.elt) {
           try {
             vid.elt.pause();
             vid.remove();
-          } catch (e) {
-            console.warn(`Error stopping video ${i}:`, e);
-          }
+          } catch {}
         }
       });
       vids.current = [];
-      
       imgs.current = [];
-      
+
       if (p5Instance.current) {
         try {
           p5Instance.current.remove();
           p5Instance.current = null;
-        } catch (e) {
-          console.warn("Error removing p5 instance:", e);
-        }
+        } catch {}
+      }
+
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        try {
+          recorderRef.current.stop();
+        } catch {}
+      }
+      if (recordStreamRef.current) {
+        recordStreamRef.current.getTracks().forEach((track) => track.stop());
+        recordStreamRef.current = null;
       }
     };
   }, []);
@@ -137,78 +167,203 @@ const DynamicPad: React.FC<Props> = ({
     } catch {}
   };
 
+  useEffect(() => {
+    return () => {
+      if (recordingUrl) {
+        URL.revokeObjectURL(recordingUrl);
+      }
+    };
+  }, [recordingUrl]);
+
+  const startRecording = () => {
+    if (!canvasRef.current || isRecording) return;
+    if (typeof MediaRecorder === "undefined") {
+      setRecordError("Recording is not supported in this browser.");
+      return;
+    }
+    if (typeof canvasRef.current.captureStream !== "function") {
+      setRecordError("Canvas recording is not supported in this browser.");
+      return;
+    }
+
+    try {
+      if (p5Instance.current?.userStartAudio) {
+        try {
+          p5Instance.current.userStartAudio();
+        } catch {}
+      }
+
+      const canvasStream: MediaStream = canvasRef.current.captureStream(60);
+
+      let combinedStream = canvasStream;
+      const audioCtx =
+        typeof p5Instance.current?.getAudioContext === "function"
+          ? p5Instance.current.getAudioContext()
+          : null;
+      if (audioCtx && typeof audioCtx.createMediaStreamDestination === "function") {
+        try {
+          audioCtx.resume?.();
+        } catch {}
+        if (!audioDestinationRef.current) {
+          audioDestinationRef.current = audioCtx.createMediaStreamDestination();
+        }
+        const soundOut = (p5Instance.current as any)?.soundOut;
+        if (
+          soundOut?.output?.connect &&
+          audioDestinationRef.current &&
+          !audioConnectedRef.current
+        ) {
+          try {
+            soundOut.output.connect(audioDestinationRef.current);
+            audioConnectedRef.current = true;
+          } catch {}
+        }
+        if (audioDestinationRef.current?.stream?.getAudioTracks()?.length) {
+          const composed = new MediaStream(canvasStream.getVideoTracks());
+          audioDestinationRef.current.stream
+            .getAudioTracks()
+            .forEach((track) => composed.addTrack(track));
+          combinedStream = composed;
+        }
+      }
+
+      recordStreamRef.current = combinedStream;
+      recordedChunksRef.current = [];
+
+      const typesToTry = [
+        "video/mp4;codecs=h264",
+        "video/mp4",
+        "video/webm;codecs=vp9",
+        "video/webm;codecs=vp8",
+        "video/webm",
+      ];
+      const supportedType =
+        typeof MediaRecorder.isTypeSupported === "function"
+          ? typesToTry.find((type) => MediaRecorder.isTypeSupported(type))
+          : undefined;
+      const options = supportedType ? { mimeType: supportedType } : undefined;
+
+      const recorder = new MediaRecorder(combinedStream, {
+        ...(options || {}),
+        videoBitsPerSecond: 10_000_000,
+        audioBitsPerSecond: 256_000,
+      });
+      recorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || "video/webm";
+        const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+        if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+        const url = URL.createObjectURL(blob);
+        setRecordingUrl(url);
+        const extension = mimeType.includes("mp4") ? "mp4" : "webm";
+        const filename = `holograma-dynamic-pad-${new Date()
+          .toISOString()
+          .replace(/[:.]/g, "-")}.${extension}`;
+        setRecordingFilename(filename);
+        recordedChunksRef.current = [];
+        setIsRecording(false);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      recorder.onerror = () => {
+        setRecordError("Recording failed. Please try again.");
+        setIsRecording(false);
+        if (recordStreamRef.current) {
+          recordStreamRef.current.getTracks().forEach((track) => track.stop());
+          recordStreamRef.current = null;
+        }
+      };
+
+      setRecordError(null);
+      setIsRecording(true);
+      recorder.start();
+    } catch (err) {
+      setRecordError("Recording failed. Please try again.");
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = () => {
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state === "inactive") return;
+    try {
+      recorder.stop();
+    } catch {}
+    if (recordStreamRef.current) {
+      recordStreamRef.current.getTracks().forEach((track) => track.stop());
+      recordStreamRef.current = null;
+    }
+  };
+
   const preload = (p5: any) => {
-    console.log("🔄 Preloading assets...");
-    
-    audios.forEach((src, i) => {
+    audioItems.forEach((item, i) => {
       try {
-        sounds.current[i] = p5.loadSound(
-          src,
-          () => console.log(`✅ Audio ${i} loaded`),
-          (err: any) => console.error(`❌ Error loading audio ${i}:`, err)
-        );
+        sounds.current[i] = p5.loadSound(item.url);
         soundOn.current[i] = false;
         alphaPhase.current[i] = i;
-      } catch (err) {
-        console.error(`❌ Error loading sound ${i}:`, err);
-      }
+      } catch {}
     });
 
-    images.forEach((src, i) => {
+    imageItems.forEach((item, i) => {
       try {
-        imgs.current[i] = p5.loadImage(
-          src,
-          () => console.log(`✅ Image ${i} loaded`),
-          (err: any) => console.error(`❌ Error loading image ${i}:`, err)
-        );
-      } catch (err) {
-        console.error(`❌ Error loading image ${i}:`, err);
-      }
+        imgs.current[i] = p5.loadImage(item.url);
+      } catch {}
     });
 
-    videos.forEach((src, i) => {
+    videoItems.forEach((item, i) => {
       try {
-        const v = p5.createVideo(src, () => {
-          console.log(`✅ Video ${i} loaded`);
-        });
+        const v = p5.createVideo(item.url);
         v.hide();
         v.volume(0);
         v.elt.muted = true;
         v.elt.playsInline = true;
-        v.elt.setAttribute('playsinline', '');
-        v.elt.setAttribute('webkit-playsinline', '');
-        v.elt.setAttribute('disablePictureInPicture', '');
-        v.elt.setAttribute('x-webkit-airplay', 'deny');
-        v.elt.style.pointerEvents = 'none';
+        v.elt.setAttribute("playsinline", "");
+        v.elt.setAttribute("webkit-playsinline", "");
+        v.elt.setAttribute("disablePictureInPicture", "");
+        v.elt.setAttribute("x-webkit-airplay", "deny");
+        v.elt.style.pointerEvents = "none";
         v.loop();
         vids.current[i] = v;
-      } catch (err) {
-        console.error(`❌ Error loading video ${i}:`, err);
-      }
+      } catch {}
     });
   };
 
   const setup = (p5: any, parent: Element) => {
-    console.log("🎨 Setting up canvas...");
     p5Instance.current = p5;
-    
+    try {
+      const targetDensity = Math.min(2, window.devicePixelRatio || 1);
+      p5.pixelDensity(targetDensity);
+    } catch {}
     const canvas = p5.createCanvas(
       p5.windowWidth,
       p5.windowHeight * 0.75,
       p5.WEBGL
     ).parent(parent);
-
     canvasRef.current = canvas.elt;
 
     if (isMobile) {
-      canvas.elt.addEventListener('touchstart', handleTouchStart, { passive: false });
-      canvas.elt.addEventListener('touchmove', handleTouchMove, { passive: false });
-      canvas.elt.addEventListener('touchend', handleTouchEnd, { passive: false });
-      canvas.elt.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+      canvas.elt.addEventListener("touchstart", handleTouchStart, {
+        passive: false,
+      });
+      canvas.elt.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
+      canvas.elt.addEventListener("touchend", handleTouchEnd, { passive: false });
+      canvas.elt.addEventListener("touchcancel", handleTouchEnd, {
+        passive: false,
+      });
     }
-    
     setIsReady(true);
-    console.log("✅ Canvas ready");
   };
 
   const windowResized = (p5: any) => {
@@ -237,15 +392,13 @@ const DynamicPad: React.FC<Props> = ({
         s.loop();
         s.amp(0);
         s.amp(1, 0.05);
-        
+
         const vid = looped(vids.current, i);
         if (vid && vid.elt.paused) {
           vid.loop();
         }
         soundOn.current[i] = true;
-      } catch (err) {
-        console.error(`Error toggling sound ${i} on:`, err);
-      }
+      } catch {}
     }
 
     if (!on && soundOn.current[i]) {
@@ -256,9 +409,7 @@ const DynamicPad: React.FC<Props> = ({
           fadeTimeouts.current[i] = null;
         }, 60);
         soundOn.current[i] = false;
-      } catch (err) {
-        console.error(`Error toggling sound ${i} off:`, err);
-      }
+      } catch {}
     }
   };
 
@@ -274,7 +425,6 @@ const DynamicPad: React.FC<Props> = ({
 
   const getQuadrantFromTouch = (touch: Touch, canvas: HTMLCanvasElement) => {
     if (!isInsideCanvas(touch, canvas)) return -1;
-
     const rect = canvas.getBoundingClientRect();
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
@@ -304,7 +454,6 @@ const DynamicPad: React.FC<Props> = ({
     for (let i = 0; i < e.changedTouches.length; i++) {
       const touch = e.changedTouches[i];
       if (!isInsideCanvas(touch, canvas)) continue;
-      
       const quadrant = getQuadrantFromTouch(touch, canvas);
       if (quadrant !== -1) {
         activeTouches.current.set(touch.identifier, quadrant);
@@ -321,7 +470,7 @@ const DynamicPad: React.FC<Props> = ({
     for (let i = 0; i < e.changedTouches.length; i++) {
       const touch = e.changedTouches[i];
       const oldQuadrant = activeTouches.current.get(touch.identifier);
-      
+
       if (!isInsideCanvas(touch, canvas)) {
         if (oldQuadrant !== undefined) {
           toggle(oldQuadrant, false);
@@ -360,17 +509,16 @@ const DynamicPad: React.FC<Props> = ({
   };
 
   const draw = (p5: any) => {
-    const bg = p5.color(palette.text_secondary);
+    const bg = config?.backgroundColor
+      ? p5.color(config.backgroundColor)
+      : p5.color(palette.text_secondary);
     bg.setAlpha(120);
     p5.background(bg);
 
     const anySoundOn = soundOn.current.some(Boolean);
     const bgVideo = vids.current[0];
     if (anySoundOn && bgVideo && bgVideo.width && bgVideo.height) {
-      const scale = Math.max(
-        p5.width / bgVideo.width,
-        p5.height / bgVideo.height
-      );
+      const scale = Math.max(p5.width / bgVideo.width, p5.height / bgVideo.height);
       p5.push();
       p5.tint(255, 255);
       p5.image(
@@ -414,9 +562,7 @@ const DynamicPad: React.FC<Props> = ({
           alphaPhase.current[i] += 0.02;
           const alpha = 80 + p5.sin(alphaPhase.current[i]) * 80;
           p5.tint(255, alpha);
-
           const scale = Math.min(cellW / img.width, cellH / img.height) * 0.85;
-
           p5.image(
             img,
             (-img.width * scale) / 2,
@@ -429,22 +575,20 @@ const DynamicPad: React.FC<Props> = ({
 
       p5.pop();
     }
-
-    if (isMobile) {
-      // mobile crosshair is drawn as DOM overlay for perfect centering
-    }
   };
 
   if (!Sketch || !p5SoundLoaded) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        height: '400px',
-        color: palette.text_secondary 
-      }}>
-        Cargando biblioteca de audio...
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "400px",
+          color: palette.text_secondary,
+        }}
+      >
+        Loading audio engine...
       </div>
     );
   }
@@ -463,6 +607,91 @@ const DynamicPad: React.FC<Props> = ({
         position: "relative",
       }}
     >
+      {config?.text && (
+        <div
+          style={{
+            position: "absolute",
+            top: "16px",
+            left: "16px",
+            zIndex: 6,
+            maxWidth: "320px",
+            color: palette.text,
+            background: "rgba(0,0,0,0.55)",
+            border: `1px solid ${palette.border}`,
+            padding: "10px 12px",
+            borderRadius: "12px",
+            fontSize: "14px",
+            lineHeight: 1.4,
+          }}
+        >
+          {config.text}
+        </div>
+      )}
+      <div
+        style={{
+          position: "absolute",
+          top: "16px",
+          right: "16px",
+          zIndex: 6,
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          flexWrap: "wrap",
+        }}
+      >
+        {recordingUrl && (
+          <a
+            href={recordingUrl}
+            download={recordingFilename}
+            style={{
+              color: palette.text,
+              textDecoration: "none",
+              border: `1px solid ${palette.border}`,
+              padding: "8px 12px",
+              borderRadius: "999px",
+              fontSize: "12px",
+              letterSpacing: "0.3px",
+              background: "rgba(0,0,0,0.45)",
+            }}
+          >
+            Download
+          </a>
+        )}
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          style={{
+            border: `1px solid ${palette.border}`,
+            background: isRecording ? "rgba(255, 72, 72, 0.85)" : "rgba(0,0,0,0.45)",
+            color: palette.text,
+            padding: "8px 14px",
+            borderRadius: "999px",
+            fontSize: "12px",
+            letterSpacing: "0.3px",
+            cursor: "pointer",
+          }}
+        >
+          {isRecording ? "Stop" : "Rec"}
+        </button>
+      </div>
+      {recordError && (
+        <div
+          style={{
+            position: "absolute",
+            top: "64px",
+            right: "16px",
+            zIndex: 6,
+            background: "rgba(0,0,0,0.6)",
+            color: palette.text_secondary,
+            border: `1px solid ${palette.border}`,
+            padding: "8px 12px",
+            borderRadius: "10px",
+            fontSize: "12px",
+            maxWidth: "240px",
+          }}
+        >
+          {recordError}
+        </div>
+      )}
       {isReady && showHelp && (
         <div
           style={{
@@ -561,9 +790,7 @@ const DynamicPad: React.FC<Props> = ({
                     const row = Math.floor(i / cols);
                     const x = ((col + 0.5) / cols) * 100;
                     const y = ((row + 0.5) / rows) * 100;
-                    const key = KEYS[i]
-                      ? String.fromCharCode(KEYS[i])
-                      : "";
+                    const key = KEYS[i] ? String.fromCharCode(KEYS[i]) : "";
                     return (
                       <div
                         key={`key-${i}`}
@@ -629,17 +856,12 @@ const DynamicPad: React.FC<Props> = ({
           display: block;
           outline: none;
         }
-        
+
         video {
           pointer-events: none !important;
         }
       `}</style>
-      <Sketch
-        preload={preload}
-        setup={setup}
-        draw={draw}
-        windowResized={windowResized}
-      />
+      <Sketch preload={preload} setup={setup} draw={draw} windowResized={windowResized} />
       {isMobile && (
         <div
           style={{

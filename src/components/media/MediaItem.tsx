@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 import { FaPlay, FaPause } from "react-icons/fa";
 import styles from "./MediaItem.module.css";
-import { MediaKind } from "@/types/article";
+import { MediaKind } from "@/types/media";
 
 interface Props {
   url: string;
@@ -43,7 +43,6 @@ export function MediaItem({ url, kind }: Props) {
     };
   }, [kind, url]);
 
-  /* IMAGE */
   if (kind === "image") {
     return (
       <img
@@ -55,7 +54,6 @@ export function MediaItem({ url, kind }: Props) {
     );
   }
 
-  /* VIDEO */
   if (kind === "video") {
     return (
       <video
@@ -68,7 +66,6 @@ export function MediaItem({ url, kind }: Props) {
     );
   }
 
-  /* AUDIO */
   if (kind === "audio") {
     return (
       <div
@@ -81,10 +78,7 @@ export function MediaItem({ url, kind }: Props) {
           {isPlaying ? <FaPause /> : <FaPlay />}
         </span>
 
-        <div
-          ref={waveformRef}
-          className={styles["audio-waveform"]}
-        />
+        <div ref={waveformRef} className={styles["audio-waveform"]} />
       </div>
     );
   }

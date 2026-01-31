@@ -6,19 +6,6 @@ import Image from "next/image";
 import styles from "./FeedPage.module.css";
 import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
 
-type Article = {
-  id: string;
-  title: string;
-  createdAt: string;
-  images: string[];
-  channel?: {
-    id: string;
-    title: string;
-    slug: string;
-    ownerUid: string;
-  } | null;
-};
-
 type Pad = {
   id: string;
   title: string;
@@ -43,10 +30,6 @@ type Channel = {
   } | null;
 };
 
-type FeedData = {
-  articles: Article[];
-};
-
 type PadData = {
   pads: Pad[];
 };
@@ -54,23 +37,6 @@ type PadData = {
 type ChannelData = {
   channelsByOwner: Channel[];
 };
-
-const FEED_QUERY = `
-  query Feed($uid: String!, $limit: Int!) {
-    articles(authorUid: $uid, limit: $limit) {
-      id
-      title
-      createdAt
-      images
-      channel {
-        id
-        title
-        slug
-        ownerUid
-      }
-    }
-  }
-`;
 
 const PADS_QUERY = `
   query FeedPads($uid: String!, $limit: Int!) {
@@ -105,7 +71,6 @@ const CHANNELS_QUERY = `
 `;
 
 const FeedPage = ({ uid }: { uid: string }) => {
-  const [articles, setArticles] = useState<Article[]>([]);
   const [pads, setPads] = useState<Pad[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,11 +79,7 @@ const FeedPage = ({ uid }: { uid: string }) => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [articlesData, padsData, channelsData] = await Promise.all([
-          fetchGraphQL<FeedData>(FEED_QUERY, {
-            uid,
-            limit: 96,
-          }),
+        const [padsData, channelsData] = await Promise.all([
           fetchGraphQL<PadData>(PADS_QUERY, {
             uid,
             limit: 96,
@@ -127,7 +88,6 @@ const FeedPage = ({ uid }: { uid: string }) => {
             uid,
           }),
         ]);
-        setArticles(articlesData.articles ?? []);
         setPads(padsData.pads ?? []);
         setChannels(channelsData.channelsByOwner ?? []);
       } catch (err: any) {
@@ -140,26 +100,6 @@ const FeedPage = ({ uid }: { uid: string }) => {
 
     load();
   }, [uid]);
-
-  const grouped = useMemo(() => {
-    const map = new Map<
-      string,
-      { title: string; slug?: string | null; ownerUid?: string | null; items: Article[] }
-    >();
-    articles.forEach((article) => {
-      const key = article.channel?.id ?? "uncategorized";
-      if (!map.has(key)) {
-        map.set(key, {
-          title: article.channel?.title ?? "Uncategorized",
-          slug: article.channel?.slug ?? null,
-          ownerUid: article.channel?.ownerUid ?? null,
-          items: [],
-        });
-      }
-      map.get(key)!.items.push(article);
-    });
-    return Array.from(map.values());
-  }, [articles]);
 
   const groupedPads = useMemo(() => {
     const map = new Map<
@@ -199,7 +139,7 @@ const FeedPage = ({ uid }: { uid: string }) => {
 
   return (
     <div className={styles["feed-container"]}>
-      {channels.length === 0 && articles.length === 0 && pads.length === 0 && (
+      {channels.length === 0 && pads.length === 0 && (
         <div className={styles["feed-empty"]}>No content yet.</div>
       )}
 
@@ -244,51 +184,6 @@ const FeedPage = ({ uid }: { uid: string }) => {
             ))}
           </div>
         </section>
-      )}
-
-      {!!grouped.length && (
-        <div className={styles["feed-sections"]}>
-          {grouped.map((section) => (
-            <section key={section.title} className={styles["feed-section"]}>
-              <div className={styles["feed-section-header"]}>
-                <h2>Articles · {section.title}</h2>
-                {section.slug && section.ownerUid && (
-                  <Link
-                    href={`/channels/${section.ownerUid}/${section.slug}`}
-                    className={styles["feed-section-link"]}
-                  >
-                    Open channel
-                  </Link>
-                )}
-              </div>
-              <div className={styles["feed-grid"]}>
-                {section.items.map((article) => (
-                  <Link
-                    key={article.id}
-                    href={`/articles/${article.id}`}
-                    className={styles["feed-card"]}
-                  >
-                    <div className={styles["feed-card-image"]}>
-                      {article.images?.[0] ? (
-                        <Image
-                          src={article.images[0]}
-                          alt={article.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                        />
-                      ) : (
-                        <div className={styles["feed-card-placeholder"]}>No image</div>
-                      )}
-                    </div>
-                    <div className={styles["feed-card-body"]}>
-                      <div className={styles["feed-card-title"]}>{article.title}</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
       )}
 
       {!!groupedPads.length && (

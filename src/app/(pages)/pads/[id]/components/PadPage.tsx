@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./PadPage.module.css";
-import DynamicPad from "@/app/(pages)/articles/[id]/components/DynamicPad";
+import DynamicPad from "@/components/pads/DynamicPad";
 import { useAuth } from "@/app/(providers)/auth-provider";
 
 type Pad = {
@@ -14,6 +14,15 @@ type Pad = {
   images: string[];
   videos: string[];
   audios: string[];
+  config?: {
+    backgroundColor?: string;
+    text?: string;
+  };
+  media: Array<{
+    id: string;
+    url: string;
+    kind: "image" | "video" | "audio";
+  }>;
 };
 
 export default function PadPage({ id }: { id: string }) {
@@ -69,7 +78,7 @@ export default function PadPage({ id }: { id: string }) {
         )}
       </header>
 
-      <DynamicPad audios={pad.audios} images={pad.images} videos={pad.videos} />
+      <DynamicPad media={pad.media ?? []} config={pad.config} />
     </div>
   );
 }

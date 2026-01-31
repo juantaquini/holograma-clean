@@ -1,8 +1,8 @@
 import { useState, Dispatch, SetStateAction } from "react";
-import { ExistingMedia, NewMedia, MediaKind } from "@/types/article";
+import { ExistingMedia, NewMedia, MediaKind } from "@/types/media";
 import { uploadMedia } from "@/lib/functions/uploadMedia";
 
-interface UseArticleMediaReturn {
+interface UsePadMediaReturn {
   existing: ExistingMedia[];
   added: NewMedia[];
   removed: string[];
@@ -10,14 +10,15 @@ interface UseArticleMediaReturn {
   setOrder: Dispatch<SetStateAction<string[]>>;
   setExisting: Dispatch<SetStateAction<ExistingMedia[]>>;
   addFiles: (files: FileList | null) => Promise<void>;
+  addUploadedMedia: (file: File, media: { id: string; url: string; kind: MediaKind }) => void;
   removeExisting: (id: string) => void;
   removeAdded: (id: string) => void;
 }
 
-export function useArticleMedia(
+export function usePadMedia(
   initial: ExistingMedia[] = [],
   sessionId: string
-): UseArticleMediaReturn {
+): UsePadMediaReturn {
   const [existing, setExisting] = useState(initial);
   const [added, setAdded] = useState<NewMedia[]>([]);
   const [removed, setRemoved] = useState<string[]>([]);
@@ -48,26 +49,28 @@ export function useArticleMedia(
 
         setAdded((p) =>
           p.map((m) =>
-            m.id === tempId
-              ? { ...media, file, status: "ready" }
-              : m
+            m.id === tempId ? { ...media, file, status: "ready" } : m
           )
         );
 
-        setOrder((p) =>
-          p.map((id) => (id === tempId ? media.id : id))
-        );
+        setOrder((p) => p.map((id) => (id === tempId ? media.id : id)));
 
         URL.revokeObjectURL(tempUrl);
       } catch (err) {
         console.error("Upload media error:", err);
         setAdded((p) =>
-          p.map((m) =>
-            m.id === tempId ? { ...m, status: "error" } : m
-          )
+          p.map((m) => (m.id === tempId ? { ...m, status: "error" } : m))
         );
       }
     }
+  };
+
+  const addUploadedMedia = (
+    file: File,
+    media: { id: string; url: string; kind: MediaKind }
+  ) => {
+    setAdded((p) => [...p, { ...media, file, status: "ready" }]);
+    setOrder((p) => [...p, media.id]);
   };
 
   const removeExisting = (id: string) => {
@@ -93,6 +96,7 @@ export function useArticleMedia(
     setOrder,
     setExisting,
     addFiles,
+    addUploadedMedia,
     removeExisting,
     removeAdded,
   };

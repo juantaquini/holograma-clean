@@ -4,29 +4,13 @@ import { supabase } from "@/lib/supabase/supabase-server";
 
 export const runtime = "nodejs";
 
-type ArticleMedia = {
+type MediaRow = {
   id: string;
   url: string;
   kind: "image" | "video" | "audio";
   width?: number | null;
   height?: number | null;
   duration?: number | null;
-};
-
-type ArticleRow = {
-  id: string;
-  title: string;
-  artist?: string | null;
-  content?: string | null;
-  author_uid: string;
-  created_at: string;
-  channel_id?: string | null;
-  article_media?: Array<{
-    position: number;
-    media: ArticleMedia | ArticleMedia[] | null;
-  }>;
-  channels?: ChannelRow | ChannelRow[] | null;
-  users?: UserRow | UserRow[] | null;
 };
 
 type ChannelRow = {
@@ -51,7 +35,7 @@ type SketchRow = {
   channel_id?: string | null;
   sketch_media?: Array<{
     z_index: number;
-    media: ArticleMedia | ArticleMedia[] | null;
+    media: MediaRow | MediaRow[] | null;
   }>;
   channels?: ChannelRow | ChannelRow[] | null;
   users?: UserRow | UserRow[] | null;
@@ -82,21 +66,6 @@ const schema = buildSchema(`
     owner: Author
   }
 
-  type Article {
-    id: ID!
-    title: String!
-    artist: String
-    content: String
-    authorUid: String!
-    createdAt: String!
-    images: [String!]!
-    videos: [String!]!
-    audios: [String!]!
-    media: [Media!]!
-    channel: Channel
-    author: Author
-  }
-
   type Pad {
     id: ID!
     title: String!
@@ -111,9 +80,6 @@ const schema = buildSchema(`
   }
 
   type Query {
-    articles(authorUid: String, channelId: ID, limit: Int, offset: Int): [Article!]!
-    recentArticles(limit: Int): [Article!]!
-    article(id: ID!): Article
     pads(ownerUid: String, channelId: ID, limit: Int, offset: Int): [Pad!]!
     pad(id: ID!): Pad
     channels(limit: Int, offset: Int): [Channel!]!
@@ -174,38 +140,6 @@ const mapChannelWithOwner = (channel: ChannelRow, owner?: UserRow | null) => {
   };
 };
 
-const mapArticle = (article: ArticleRow) => {
-  const rawChannel = Array.isArray(article.channels)
-    ? article.channels[0]
-    : article.channels;
-  const channel = rawChannel ? mapChannel(rawChannel) : null;
-
-  const rawAuthor = Array.isArray(article.users) ? article.users[0] : article.users;
-  const author = rawAuthor
-    ? { uid: rawAuthor.uid, displayName: rawAuthor.display_name ?? null }
-    : null;
-
-  const sorted = (article.article_media || [])
-    .sort((a, b) => a.position - b.position)
-    .map((am) => (Array.isArray(am.media) ? am.media[0] : am.media))
-    .filter(Boolean) as ArticleMedia[];
-
-  return {
-    id: article.id,
-    title: article.title,
-    artist: article.artist ?? null,
-    content: article.content ?? null,
-    authorUid: article.author_uid,
-    createdAt: article.created_at,
-    images: sorted.filter((m) => m.kind === "image").map((m) => m.url),
-    videos: sorted.filter((m) => m.kind === "video").map((m) => m.url),
-    audios: sorted.filter((m) => m.kind === "audio").map((m) => m.url),
-    media: sorted,
-    channel,
-    author,
-  };
-};
-
 const mapPad = (sketch: SketchRow) => {
   const rawChannel = Array.isArray(sketch.channels)
     ? sketch.channels[0]
@@ -220,7 +154,7 @@ const mapPad = (sketch: SketchRow) => {
   const sorted = (sketch.sketch_media || [])
     .sort((a, b) => a.z_index - b.z_index)
     .map((sm) => (Array.isArray(sm.media) ? sm.media[0] : sm.media))
-    .filter(Boolean) as ArticleMedia[];
+    .filter(Boolean) as MediaRow[];
 
   return {
     id: sketch.id,
@@ -234,118 +168,6 @@ const mapPad = (sketch: SketchRow) => {
     channel,
     author,
   };
-};
-
-const fetchArticles = async ({
-  authorUid,
-  channelId,
-  limit,
-  offset,
-}: {
-  authorUid?: string | null;
-  channelId?: string | null;
-  limit?: number | null;
-  offset?: number | null;
-}) => {
-  const safeLimit = clampLimit(limit);
-  const safeOffset = clampOffset(offset);
-
-  let query = supabase
-    .from("article")
-    .select(
-      `
-      id,
-      title,
-      artist,
-      content,
-      author_uid,
-      created_at,
-      channel_id,
-      article_media (
-        position,
-        media (
-          id,
-          url,
-          kind,
-          width,
-          height,
-          duration
-        )
-      ),
-      channels (
-        id,
-        owner_uid,
-        title,
-        slug,
-        description,
-        cover_media:media (url)
-      ),
-      users (
-        uid,
-        display_name
-      )
-    `
-    )
-    .order("created_at", { ascending: false })
-    .range(safeOffset, safeOffset + safeLimit - 1);
-
-  if (authorUid) {
-    query = query.eq("author_uid", authorUid);
-  }
-  if (channelId) {
-    query = query.eq("channel_id", channelId);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-
-  return (data || []).map((article) => mapArticle(article as ArticleRow));
-};
-
-const fetchArticleById = async (id: string) => {
-  const { data, error } = await supabase
-    .from("article")
-    .select(
-      `
-      id,
-      title,
-      artist,
-      content,
-      author_uid,
-      created_at,
-      channel_id,
-      article_media (
-        position,
-        media (
-          id,
-          url,
-          kind,
-          width,
-          height,
-          duration
-        )
-      ),
-      channels (
-        id,
-        owner_uid,
-        title,
-        slug,
-        description,
-        cover_media:media (url)
-      ),
-      users (
-        uid,
-        display_name
-      )
-    `
-    )
-    .eq("id", id)
-    .single();
-
-  if (error) throw error;
-  if (!data) return null;
-
-  return mapArticle(data as ArticleRow);
 };
 
 const fetchPads = async ({
@@ -594,19 +416,6 @@ const createChannel = async ({
 };
 
 const root = {
-  articles: ({
-    authorUid,
-    channelId,
-    limit,
-    offset,
-  }: {
-    authorUid?: string;
-    channelId?: string;
-    limit?: number;
-    offset?: number;
-  }) => fetchArticles({ authorUid, channelId, limit, offset }),
-  recentArticles: ({ limit }: { limit?: number }) => fetchArticles({ limit }),
-  article: ({ id }: { id: string }) => fetchArticleById(id),
   pads: ({
     ownerUid,
     channelId,

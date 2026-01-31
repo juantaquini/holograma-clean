@@ -13,7 +13,7 @@ export interface ExistingMedia extends BaseMedia {
 }
 
 export interface NewMedia extends BaseMedia {
-  id: string;       
+  id: string;
   file: File;
   url: string;
   kind: MediaKind;

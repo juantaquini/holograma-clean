@@ -102,7 +102,6 @@
   height: 140px;
   border-radius: 8px;
   border: 1.5px dashed var(--text-color);
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,18 +114,16 @@
 
 @media screen and (max-width: 768px) {
   .media-wrapper {
-  width: 140px;
-  height: 120px;
-}
+    width: 140px;
+    height: 120px;
+  }
   .media-preview {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     min-height: 170px;
     max-height: 315px;
   }
-
-
-.add-media-button {
-  width: 140px;
-  height: 120px;
-}
+  .add-media-button {
+    width: 140px;
+    height: 120px;
+  }
 }

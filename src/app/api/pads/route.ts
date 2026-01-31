@@ -10,6 +10,16 @@ export async function POST(req: Request) {
     const title = formData.get("title") as string;
     const owner_uid = formData.get("owner_uid") as string;
     const channel_id = formData.get("channel_id") as string;
+    const configRaw = formData.get("config") as string | null;
+
+    let config: Record<string, any> = {};
+    if (configRaw) {
+      try {
+        config = JSON.parse(configRaw);
+      } catch {
+        return NextResponse.json({ error: "Invalid config" }, { status: 400 });
+      }
+    }
 
     if (!title || !owner_uid) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -21,6 +31,7 @@ export async function POST(req: Request) {
         name: title,
         user_uid: owner_uid,
         channel_id: channel_id || null,
+        config,
       })
       .select()
       .single();

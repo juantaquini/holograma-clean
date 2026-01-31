@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(7);
     const ext = file.name.split(".").pop() || "bin";
-    const key = `articles/temp/${effectiveSessionId}/${timestamp}-${randomStr}.${ext}`;
+    const key = `pads/temp/${effectiveSessionId}/${timestamp}-${randomStr}.${ext}`;
 
     console.log("🔑 Key gerada:", key);
 

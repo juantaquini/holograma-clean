@@ -5,7 +5,7 @@ import { Reorder } from "framer-motion";
 import { FiPlus } from "react-icons/fi";
 
 import styles from "./MediaSection.module.css";
-import { ExistingMedia, NewMedia, MediaKind } from "@/types/article";
+import { ExistingMedia, NewMedia, MediaKind } from "@/types/media";
 import { MediaItem } from "./MediaItem";
 
 interface Props {
@@ -36,7 +36,6 @@ export function MediaSection({
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Filtramos los items por kind y en el orden actual
   const items = useMemo(() => {
     return order
       .map(
@@ -46,7 +45,6 @@ export function MediaSection({
       .filter((m): m is ExistingMedia | NewMedia => !!m && m.kind === kind);
   }, [order, existing, added, kind]);
 
-  // Mantener orden de otros kinds al reordenar
   const handleReorder = (newItemIds: string[]) => {
     setOrder((prevOrder) => {
       const otherKindIds = prevOrder.filter((id) => {
@@ -58,16 +56,12 @@ export function MediaSection({
     });
   };
 
-  // Atributo accept para iOS/mobile
   const acceptAttr =
     kind === "image"
       ? "image/*"
       : kind === "video"
       ? "video/*"
       : "audio/*,audio/mpeg,audio/mp3,audio/wav,audio/ogg";
-
-  // Capture solo para audio (permite grabar en mobile)
-  const captureAttr = kind === "audio" ? "microphone" : undefined;
 
   return (
     <section className={styles["media-section"]}>
@@ -116,7 +110,6 @@ export function MediaSection({
           );
         })}
 
-        {/* ADD BUTTON */}
         <div
           className={styles["add-media-button"]}
           onClick={() => inputRef.current?.click()}
@@ -130,7 +123,6 @@ export function MediaSection({
         type="file"
         multiple
         accept={acceptAttr}
-       // capture={kind === "audio" ? ("microphone" as any) : undefined} // ✅ cast a any
         className={styles["hidden-input"]}
         onChange={(e) => addFiles(e.target.files)}
       />

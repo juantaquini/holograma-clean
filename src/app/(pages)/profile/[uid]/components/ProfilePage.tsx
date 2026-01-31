@@ -6,28 +6,22 @@ import Image from "next/image";
 import styles from "./ProfilePage.module.css";
 import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
 
-type Article = {
+type Pad = {
   id: string;
   title: string;
-  artist?: string | null;
-  content?: string | null;
-  authorUid: string;
   createdAt: string;
   images: string[];
 };
 
 type ProfileData = {
-  articles: Article[];
+  pads: Pad[];
 };
 
 const PROFILE_QUERY = `
   query Profile($uid: String!, $limit: Int!) {
-    articles(authorUid: $uid, limit: $limit) {
+    pads(ownerUid: $uid, limit: $limit) {
       id
       title
-      artist
-      content
-      authorUid
       createdAt
       images
     }
@@ -49,7 +43,7 @@ const formatDate = (value?: string | null) => {
 };
 
 const ProfilePage = ({ uid }: { uid: string }) => {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [pads, setPads] = useState<Pad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,7 +54,7 @@ const ProfilePage = ({ uid }: { uid: string }) => {
           uid,
           limit: 64,
         });
-        setArticles(data.articles ?? []);
+        setPads(data.pads ?? []);
       } catch (err: any) {
         console.error(err);
         setError(err.message ?? "No se pudo cargar el perfil.");
@@ -72,7 +66,7 @@ const ProfilePage = ({ uid }: { uid: string }) => {
     load();
   }, [uid]);
 
-  const hasContent = articles.length;
+  const hasContent = pads.length;
 
   if (isLoading) {
     return (
@@ -110,20 +104,20 @@ const ProfilePage = ({ uid }: { uid: string }) => {
         </div>
       )}
 
-      {!!articles.length && (
+      {!!pads.length && (
         <section className={styles["profile-section"]}>
           <div className={styles["profile-grid"]}>
-            {articles.map((article) => (
+            {pads.map((pad) => (
               <Link
-                key={`profile-article-${article.id}`}
-                href={`/articles/${article.id}`}
+                key={`profile-pad-${pad.id}`}
+                href={`/pads/${pad.id}`}
                 className={styles["profile-card"]}
               >
                 <div className={styles["profile-card-image"]}>
-                  {article.images?.[0] ? (
+                  {pad.images?.[0] ? (
                     <Image
-                      src={article.images[0]}
-                      alt={article.title}
+                      src={pad.images[0]}
+                      alt={pad.title}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
@@ -134,7 +128,7 @@ const ProfilePage = ({ uid }: { uid: string }) => {
                   )}
                 </div>
                 <div className={styles["profile-card-body"]}>
-                  <div className={styles["profile-card-title"]}>{article.title}</div>
+                  <div className={styles["profile-card-title"]}>{pad.title}</div>
                 </div>
               </Link>
             ))}

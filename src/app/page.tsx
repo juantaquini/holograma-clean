@@ -20,16 +20,14 @@ export default function Home() {
   }
 
   return (
-    <div
-    >
+    <div>
       <h1 style={{ fontSize: "28px", letterSpacing: "0.6px" }}>Holograma</h1>
       <p style={{ color: "var(--text-color-secondary)" }}>
-        Explore the latest articles and interactives.
+        Create playful audio pads with video, images, and your own recordings.
       </p>
       <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-        <Link href="/explore">Explore</Link>
-        <Link href="/interactives">Interactives</Link>
-        <Link href="/articles">Articles</Link>
+        <Link href="/pads/create">Create pad</Link>
+        <Link href="/explore">Explore pads</Link>
       </div>
     </div>
   );

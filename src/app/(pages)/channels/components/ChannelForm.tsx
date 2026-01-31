@@ -86,7 +86,7 @@ export default function ChannelForm({
         }
 
         if (data.channelBySlug.ownerUid !== user.uid) {
-          router.replace(`/channels/${uid}/${channelSlug}`);
+      router.replace(`/channels/${uid}/${channelSlug}`);
           return;
         }
 
@@ -184,7 +184,7 @@ export default function ChannelForm({
         <h1>{mode === "create" ? "Create channel" : "Edit channel"}</h1>
         <p>
           {mode === "create"
-            ? "Organize your content into public channels."
+            ? "Organize your pads under a public channel."
             : "Update your channel details."}
         </p>
       </header>

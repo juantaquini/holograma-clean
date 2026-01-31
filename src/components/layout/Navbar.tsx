@@ -83,12 +83,19 @@ export default function Navbar() {
             HOLOGRAMA
           </Link>
 
-          <button
-            className={styles["navbar-avatar"]}
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            {user ? initials : "LOG"}
-          </button>
+          <div className={styles["navbar-mobile-actions"]}>
+            {user?.uid && (
+              <Link className={styles["navbar-create-pad"]} href="/pads/create">
+                Create pad
+              </Link>
+            )}
+            <button
+              className={styles["navbar-avatar"]}
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              {user ? initials : "LOG"}
+            </button>
+          </div>
         </div>
       )}
 
@@ -98,12 +105,19 @@ export default function Navbar() {
             HOLOGRAMA
           </Link>
 
-          <button
-            className={styles["navbar-avatar"]}
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            {user ? initials : "LOG"}
-          </button>
+          <div className={styles["navbar-actions"]}>
+            {user?.uid && (
+              <Link className={styles["navbar-create-pad"]} href="/pads/create">
+                Create pad
+              </Link>
+            )}
+            <button
+              className={styles["navbar-avatar"]}
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              {user ? initials : "LOG"}
+            </button>
+          </div>
         </nav>
       )}
 
@@ -128,11 +142,11 @@ export default function Navbar() {
               <Link href="/explore" onClick={handleLinkClick}>
                 Explore
               </Link>
-              <Link href="/articles" onClick={handleLinkClick}>
-                Articles
-              </Link>
               {user?.uid && (
                 <>
+                  <Link href="/pads/create" onClick={handleLinkClick}>
+                    Create pad
+                  </Link>
                   <Link href={`/feed/${user.uid}`} onClick={handleLinkClick}>
                     Your feed
                   </Link>

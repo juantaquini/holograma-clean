@@ -20,12 +20,6 @@ type Channel = {
   } | null;
 };
 
-type Article = {
-  id: string;
-  title: string;
-  images: string[];
-};
-
 type Pad = {
   id: string;
   title: string;
@@ -34,10 +28,6 @@ type Pad = {
 
 type ChannelData = {
   channelBySlug: Channel | null;
-};
-
-type ArticlesData = {
-  articles: Article[];
 };
 
 type PadsData = {
@@ -61,16 +51,6 @@ const CHANNEL_QUERY = `
   }
 `;
 
-const ARTICLES_QUERY = `
-  query ChannelArticles($channelId: ID!, $limit: Int!) {
-    articles(channelId: $channelId, limit: $limit) {
-      id
-      title
-      images
-    }
-  }
-`;
-
 const PADS_QUERY = `
   query ChannelPads($channelId: ID!, $limit: Int!) {
     pads(channelId: $channelId, limit: $limit) {
@@ -84,7 +64,6 @@ const PADS_QUERY = `
 const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string }) => {
   const { user } = useAuth();
   const [channel, setChannel] = useState<Channel | null>(null);
-  const [articles, setArticles] = useState<Article[]>([]);
   const [pads, setPads] = useState<Pad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,17 +84,10 @@ const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string })
 
         setChannel(channelData.channelBySlug);
 
-        const [articlesData, padsData] = await Promise.all([
-          fetchGraphQL<ArticlesData>(ARTICLES_QUERY, {
-            channelId: channelData.channelBySlug.id,
-            limit: 64,
-          }),
-          fetchGraphQL<PadsData>(PADS_QUERY, {
-            channelId: channelData.channelBySlug.id,
-            limit: 64,
-          }),
-        ]);
-        setArticles(articlesData.articles ?? []);
+        const padsData = await fetchGraphQL<PadsData>(PADS_QUERY, {
+          channelId: channelData.channelBySlug.id,
+          limit: 64,
+        });
         setPads(padsData.pads ?? []);
       } catch (err: any) {
         console.error(err);
@@ -128,7 +100,6 @@ const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string })
     load();
   }, [uid, channelSlug]);
 
-  const items = useMemo(() => articles, [articles]);
   const padItems = useMemo(() => pads, [pads]);
 
   if (isLoading) {
@@ -155,12 +126,6 @@ const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string })
           {channel.description && <p>{channel.description}</p>}
         </div>
         <div className={styles["channel-actions"]}>
-          <Link
-            className={styles["channel-action"]}
-            href={`/articles/create?channelId=${channel.id}`}
-          >
-            Create article
-          </Link>
           <Link
             className={styles["channel-action"]}
             href={`/pads/create?channelId=${channel.id}`}
@@ -190,35 +155,8 @@ const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string })
         </div>
       )}
 
-      {items.length === 0 && padItems.length === 0 && (
+      {padItems.length === 0 && (
         <div className={styles["channel-empty"]}>No content yet.</div>
-      )}
-
-      {!!items.length && (
-        <div className={styles["channel-section"]}>
-          <div className={styles["channel-section-title"]}>Articles</div>
-          <div className={styles["channel-grid"]}>
-            {items.map((article) => (
-              <Link key={article.id} href={`/articles/${article.id}`} className={styles["channel-card"]}>
-                <div className={styles["channel-card-image"]}>
-                  {article.images?.[0] ? (
-                    <Image
-                      src={article.images[0]}
-                      alt={article.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                    />
-                  ) : (
-                    <div className={styles["channel-card-placeholder"]}>No image</div>
-                  )}
-                </div>
-                <div className={styles["channel-card-body"]}>
-                  <div className={styles["channel-card-title"]}>{article.title}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
       )}
 
       {!!padItems.length && (
