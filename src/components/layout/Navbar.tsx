@@ -5,8 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
 import { FiX } from "react-icons/fi";
+import { VscStarEmpty } from "react-icons/vsc";
 import { usePopup } from "@/app/(providers)/popup-provider";
 import { useAuth } from "@/app/(providers)/auth-provider";
+import { useColorTheme } from "@/app/(providers)/color-theme-provider";
+import { colorPalettes, type ThemeName } from "@/lib/color-palettes";
 import Login from "@/components/auth/Login";
 import Signin from "@/components/auth/Signin";
 
@@ -18,6 +21,7 @@ export default function Navbar() {
 
   const { openPopup, closePopup } = usePopup();
   const auth = useAuth();
+  const { theme, changeTheme } = useColorTheme();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -73,6 +77,11 @@ export default function Navbar() {
     return "U";
   }, [user?.displayName, user?.email]);
 
+  const availableThemes = useMemo(
+    () => Object.keys(colorPalettes) as ThemeName[],
+    []
+  );
+
   /* ---------------- RENDER ---------------- */
 
   return (
@@ -89,12 +98,24 @@ export default function Navbar() {
                 Create pad
               </Link>
             )}
-            <button
-              className={styles["navbar-avatar"]}
-              onClick={() => setMenuOpen((o) => !o)}
-            >
-              {user ? initials : "LOG"}
-            </button>
+            {user ? (
+              <button
+                className={styles["navbar-avatar"]}
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label="Open menu"
+              >
+                <VscStarEmpty size={20} />
+              </button>
+            ) : (
+              <div className={styles["navbar-auth-actions"]}>
+                <button className={styles["navbar-auth-button"]} onClick={openLogin}>
+                  Login
+                </button>
+                <button className={styles["navbar-auth-button"]} onClick={openSignin}>
+                  Signin
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -111,17 +132,29 @@ export default function Navbar() {
                 Create pad
               </Link>
             )}
-            <button
-              className={styles["navbar-avatar"]}
-              onClick={() => setMenuOpen((o) => !o)}
-            >
-              {user ? initials : "LOG"}
-            </button>
+            {user ? (
+              <button
+                className={styles["navbar-avatar"]}
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label="Open menu"
+              >
+                <VscStarEmpty size={20} />
+              </button>
+            ) : (
+              <div className={styles["navbar-auth-actions"]}>
+                <button className={styles["navbar-auth-button"]} onClick={openLogin}>
+                  Login
+                </button>
+                <button className={styles["navbar-auth-button"]} onClick={openSignin}>
+                  Signin
+                </button>
+              </div>
+            )}
           </div>
         </nav>
       )}
 
-      {menuOpen && (
+      {menuOpen && user && (
         <>
           <div
             className={styles["navbar-overlay"]}
@@ -158,6 +191,26 @@ export default function Navbar() {
                   </Link>
                 </>
               )}
+            </div>
+
+            <div className={styles["navbar-theme-section"]}>
+              <div className={styles["navbar-theme-title"]}>Theme</div>
+              <div className={styles["navbar-theme-grid"]}>
+                {availableThemes.map((themeName) => (
+                  <button
+                    key={themeName}
+                    type="button"
+                    className={
+                      themeName === theme
+                        ? `${styles["navbar-theme-button"]} ${styles["navbar-theme-button-active"]}`
+                        : styles["navbar-theme-button"]
+                    }
+                    onClick={() => changeTheme(themeName)}
+                  >
+                    {themeName}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className={styles["navbar-sidebar-footer"]}>
