@@ -3,6 +3,7 @@ import { IBM_Plex_Sans } from "next/font/google";
 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import Subnav from "@/components/layout/Subnav";
 import ColorThemeProvider from "@/app/(providers)/color-theme-provider";
 import { AuthContextProvider } from "./(providers)/auth-provider";
 import { PopupProvider } from "./(providers)/popup-provider";
@@ -31,6 +32,7 @@ export default function RootLayout({
             <ColorThemeProvider>
               <PopupProvider>
                 <Navbar />
+                <Subnav />
                 {children}
               </PopupProvider>
             </ColorThemeProvider>

@@ -1,6 +1,6 @@
 .explore-container {
   width: 100%;
-  padding: 8vw 3vw 8vw 3vw;
+  padding: 3vw 0vw 3vw 0vw;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -15,7 +15,7 @@
 
 .explore-header h1 {
   font-size: 36px;
-  letter-spacing: 1px;
+  letter-spacing: 0.6px;
 }
 
 .explore-header p {
@@ -23,40 +23,37 @@
   letter-spacing: 0.4px;
 }
 
-.explore-divider {
-  width: 100%;
-  height: 1px;
-  border-top: 2px dashed var(--border-color);
-}
-
 .explore-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  border-radius: 16px;
-  padding: 20px;
+  gap: 18px;
+}
+
+.explore-section-title {
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-color-secondary);
 }
 
 .explore-grid {
   display: grid;
-  gap: 18px;
+  column-gap: 18px;
+  row-gap: 18px;
+  justify-content: space-between;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .explore-card {
-  border: 2px dashed var(--text-color);
-  border-radius: 14px;
   overflow: hidden;
-  background: transparent;
   color: inherit;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
 .explore-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--text-color);
+  opacity: 0.8;
 }
 
 .explore-card-image {
@@ -68,6 +65,7 @@
 
 .explore-card-image img {
   object-fit: contain;
+  object-position: left top;
 }
 
 .explore-card-media-link {
@@ -91,25 +89,56 @@
 }
 
 .explore-card-body {
-  padding: 16px;
+  padding: 12px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  text-align: center;
+  gap: 6px;
+  text-align: left;
 }
 
 .explore-card-title {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: var(--text-color-secondary);
+}
+
+.explore-channel-placeholder {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 12px;
+}
+
+.explore-channel-title {
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  color: var(--text-color);
+}
+
+.explore-channel-by {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-color-secondary);
+}
+
+.explore-channel-user {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: var(--text-color-secondary);
 }
 
 .explore-loading,
 .explore-error,
 .explore-empty {
   padding: 20px;
-  border: 1px dashed var(--border-color);
-  border-radius: 12px;
   text-align: center;
   color: var(--text-color-secondary);
 }

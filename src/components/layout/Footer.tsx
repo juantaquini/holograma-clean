@@ -14,8 +14,8 @@ export default function Footer() {
 
         <div className={styles["footer-links"]}>
           <Link href="/explore">Explore</Link>
-          <Link href="/interactives">Interactives</Link>
-          <Link href="/articles">Articles</Link>
+          <Link href="/pads/create">Create pad</Link>
+          <Link href="/channels/create">Create channel</Link>
         </div>
       </div>
 

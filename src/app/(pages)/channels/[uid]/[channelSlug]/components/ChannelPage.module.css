@@ -1,0 +1,153 @@
+.channel-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.channel-breadcrumb {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.channel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.channel-header h1 {
+  font-size: 32px;
+}
+
+.channel-header p {
+  color: var(--text-color-secondary);
+}
+
+.channel-meta {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+}
+
+.channel-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.channel-action {
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 12px;
+  letter-spacing: 0.4px;
+}
+
+.channel-action:hover {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 4px;
+}
+
+.channel-cover {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+}
+
+.channel-cover img {
+  object-fit: cover;
+}
+
+.channel-grid {
+  display: grid;
+  column-gap: 18px;
+  row-gap: 18px;
+  justify-content: space-between;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.channel-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.channel-section-title {
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-color-secondary);
+}
+
+.channel-card {
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.2s ease;
+}
+
+.channel-card:hover {
+  opacity: 0.8;
+}
+
+.channel-card-image {
+  position: relative;
+  width: 100%;
+  height: 180px;
+}
+
+.channel-card-image img {
+  object-fit: contain;
+  object-position: left top;
+}
+
+.channel-card-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-color-secondary);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.channel-card-body {
+  padding: 10px 0 0;
+  text-align: left;
+}
+
+.channel-card-title {
+  font-size: 14px;
+  letter-spacing: 0.4px;
+  color: var(--text-color-secondary);
+}
+
+.channel-loading,
+.channel-error,
+.channel-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-color-secondary);
+}
+
+@media (max-width: 720px) {
+  .channel-container {
+    padding: 24px 14px 60px;
+  }
+
+  .channel-header h1 {
+    font-size: 28px;
+  }
+
+  .channel-cover {
+    height: 220px;
+  }
+}

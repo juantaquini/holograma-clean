@@ -1,4 +1,4 @@
-import { MediaKind } from "@/types/article";
+import { MediaKind } from "@/types/media";
 
 export async function uploadMedia(
   file: File,

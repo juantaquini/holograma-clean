@@ -1,0 +1,94 @@
+.pad-create-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pad-create-header h1 {
+  font-size: 30px;
+}
+
+.pad-create-header p {
+  color: var(--text-color-secondary);
+}
+
+.pad-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pad-create-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.channel-create-button {
+  padding: 0.5rem 1rem;
+  border-radius: 32px;
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: opacity 0.3s;
+}
+
+.pad-create-button-secondary {
+  padding: 0.5rem 1rem;
+  border-radius: 32px;
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1px dashed var(--border-color);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: opacity 0.3s;
+}
+
+.pad-create-button-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pad-create-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.pad-recorder {
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--lighter-bg-color);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pad-recorder-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pad-recorder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pad-recorder-status {
+  color: var(--text-color-secondary);
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .pad-create-container {
+    padding: 24px 14px 60px;
+  }
+}

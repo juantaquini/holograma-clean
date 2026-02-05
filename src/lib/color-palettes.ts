@@ -14,7 +14,7 @@ export type ColorPalette = {
 };
 
 export const colorPalettes: Record<string, ColorPalette> = {
-  azulMagenta: {
+  dark: {
     background: "#040410ff",
     lighter_bg: "#303F9F",
     text: "#F8EAF6",
@@ -23,7 +23,7 @@ export const colorPalettes: Record<string, ColorPalette> = {
     button: "#E91E63",
     opacity_neutral: "#f8eaf699"
   },
-  whitesmokeAzul: {
+  light: {
     background: "#F5F5F5",
     text: "#072A60",
     text_secondary: "#1976D2",
