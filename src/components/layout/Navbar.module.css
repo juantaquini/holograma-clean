@@ -42,22 +42,6 @@
   opacity: 0.8;
 }
 
-.navbar-create-pad {
-  text-decoration: none;
-  border: 1.5px dashed var(--text-color);
-  border-radius: 999px;
-  padding: 10px 16px;
-  color: var(--text-color);
-  font-size: 12px;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  transition: opacity 0.2s;
-}
-
-.navbar-create-pad:hover {
-  opacity: 0.8;
-}
-
 .navbar-logo-text {
   display: flex;
   flex-direction: row;
@@ -110,7 +94,6 @@
   width: 46px;
   height: 46px;
   border-radius: 999px;
-  border: 1.5px dashed var(--text-color);
   background: transparent;
   color: var(--text-color);
   cursor: pointer;

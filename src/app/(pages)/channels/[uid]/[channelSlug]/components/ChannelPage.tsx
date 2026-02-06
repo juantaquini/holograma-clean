@@ -156,7 +156,15 @@ const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string })
       )}
 
       {padItems.length === 0 && (
-        <div className={styles["channel-empty"]}>No content yet.</div>
+        <div className={styles["channel-empty"]}>
+          <p className={styles["channel-empty-text"]}>No content yet.</p>
+          <Link
+            className={styles["channel-empty-button"]}
+            href={`/pads/create?channelId=${channel.id}`}
+          >
+            Create pad
+          </Link>
+        </div>
       )}
 
       {!!padItems.length && (

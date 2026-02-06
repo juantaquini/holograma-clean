@@ -36,6 +36,7 @@ export function MediaSection({
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+
   const items = useMemo(() => {
     return order
       .map(

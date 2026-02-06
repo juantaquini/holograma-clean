@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useColorTheme } from "@/app/(providers)/color-theme-provider";
 import { colorPalettes } from "@/lib/color-palettes";
 
@@ -28,11 +29,12 @@ type PadConfig = {
 interface Props {
   media: PadMedia[];
   config?: PadConfig;
+  headerActionsRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const KEYS = [75, 66, 83, 72, 74, 70, 76, 68];
 
-const DynamicPad: React.FC<Props> = ({ media, config }) => {
+const DynamicPad: React.FC<Props> = ({ media, config, headerActionsRef }) => {
   const { theme } = useColorTheme();
   const palette = colorPalettes[theme];
 
@@ -61,6 +63,9 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
   const recordStreamRef = useRef<MediaStream | null>(null);
   const audioDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const audioConnectedRef = useRef(false);
+  const audioUnlockedRef = useRef(false);
+  const prevKeyDownRef = useRef<boolean[]>([]);
+  const holdModeRef = useRef(false);
   const fadeTimeouts = useRef<any[]>([]);
   const p5Instance = useRef<any>(null);
 
@@ -74,28 +79,37 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
   const [recordingFilename, setRecordingFilename] = useState<string>(
     "holograma-dynamic-pad.webm"
   );
+  const [holdMode, setHoldMode] = useState(false);
   const [recordError, setRecordError] = useState<string | null>(null);
+  const [headerPortalReady, setHeaderPortalReady] = useState(false);
+
+  holdModeRef.current = holdMode;
 
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src =
-      "https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js";
-    script.async = true;
-    script.onload = () => {
-      setP5SoundLoaded(true);
-      import("react-p5").then((mod) => {
-        setSketch(() => mod.default);
-      });
-    };
-    script.onerror = () => {
-      setP5SoundLoaded(false);
-    };
-    document.body.appendChild(script);
+    if (!headerActionsRef) return;
+    const id = requestAnimationFrame(() => setHeaderPortalReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [headerActionsRef]);
 
+  useEffect(() => {
+    let cancelled = false;
+    import("react-p5")
+      .then((mod) => {
+        if (cancelled) return;
+        try {
+          require("p5/lib/addons/p5.sound");
+        } catch {
+          setP5SoundLoaded(false);
+          return;
+        }
+        setP5SoundLoaded(true);
+        setSketch(() => mod.default);
+      })
+      .catch(() => {
+        if (!cancelled) setP5SoundLoaded(false);
+      });
     return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
+      cancelled = true;
     };
   }, []);
 
@@ -161,6 +175,12 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
   }, []);
 
   const dismissHelp = () => {
+    if (p5Instance.current?.userStartAudio && !audioUnlockedRef.current) {
+      try {
+        p5Instance.current.userStartAudio();
+        audioUnlockedRef.current = true;
+      } catch {}
+    }
     setShowHelp(false);
     try {
       window.localStorage.setItem("dynamicPadHelpDismissed", "true");
@@ -445,9 +465,10 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
     e.stopPropagation();
     const canvas = e.target as HTMLCanvasElement;
 
-    if (p5Instance.current?.userStartAudio) {
+    if (!audioUnlockedRef.current && p5Instance.current?.userStartAudio) {
       try {
         p5Instance.current.userStartAudio();
+        audioUnlockedRef.current = true;
       } catch {}
     }
 
@@ -457,7 +478,11 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
       const quadrant = getQuadrantFromTouch(touch, canvas);
       if (quadrant !== -1) {
         activeTouches.current.set(touch.identifier, quadrant);
-        toggle(quadrant, true);
+        if (holdModeRef.current) {
+          toggle(quadrant, !soundOn.current[quadrant]);
+        } else {
+          toggle(quadrant, true);
+        }
       }
     }
   };
@@ -502,7 +527,7 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
       const quadrant = activeTouches.current.get(touch.identifier);
 
       if (quadrant !== undefined) {
-        toggle(quadrant, false);
+        if (!holdModeRef.current) toggle(quadrant, false);
         activeTouches.current.delete(touch.identifier);
       }
     }
@@ -533,10 +558,28 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
 
     if (!isMobile) {
       const padCount = Math.max(1, sounds.current.length);
+      let anyKeyDown = false;
       for (let i = 0; i < padCount; i++) {
         const keyCode = KEYS[i];
         if (!keyCode) continue;
-        toggle(i, p5.keyIsDown(keyCode));
+        const keyDown = p5.keyIsDown(keyCode);
+        if (keyDown) anyKeyDown = true;
+        if (holdModeRef.current) {
+          while (prevKeyDownRef.current.length <= i) prevKeyDownRef.current.push(false);
+          const wasDown = prevKeyDownRef.current[i];
+          if (keyDown && !wasDown) {
+            toggle(i, !soundOn.current[i]);
+          }
+          prevKeyDownRef.current[i] = keyDown;
+        } else {
+          toggle(i, keyDown);
+        }
+      }
+      if (anyKeyDown && !audioUnlockedRef.current && p5Instance.current?.userStartAudio) {
+        try {
+          p5Instance.current.userStartAudio();
+          audioUnlockedRef.current = true;
+        } catch {}
       }
     }
 
@@ -577,6 +620,59 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
     }
   };
 
+  const buttonStyle = {
+    border: `1px solid ${palette.border}`,
+    color: palette.text,
+    padding: "8px 14px",
+    borderRadius: "999px",
+    fontSize: "12px",
+    letterSpacing: "0.3px",
+    cursor: "pointer" as const,
+    background: "rgba(0,0,0,0.45)",
+  };
+
+  const headerButtonsContent = (
+    <>
+      {recordingUrl && (
+        <a
+          href={recordingUrl}
+          download={recordingFilename}
+          style={{
+            ...buttonStyle,
+            textDecoration: "none",
+          }}
+        >
+          Download
+        </a>
+      )}
+      <button
+        type="button"
+        onClick={() => setHoldMode((h) => !h)}
+        style={{
+          ...buttonStyle,
+          background: holdMode ? "rgba(100, 100, 255, 0.5)" : buttonStyle.background,
+        }}
+      >
+        {holdMode ? "Hold on" : "Hold"}
+      </button>
+      <button
+        type="button"
+        onClick={isRecording ? stopRecording : startRecording}
+        style={{
+          ...buttonStyle,
+          background: isRecording ? "rgba(255, 72, 72, 0.85)" : buttonStyle.background,
+        }}
+      >
+        {isRecording ? "Stop" : "Rec"}
+      </button>
+    </>
+  );
+
+  const renderHeaderButtonsInRef =
+    headerActionsRef && headerPortalReady && headerActionsRef.current
+      ? createPortal(headerButtonsContent, headerActionsRef.current)
+      : null;
+
   if (!Sketch || !p5SoundLoaded) {
     return (
       <div
@@ -607,6 +703,7 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
         position: "relative",
       }}
     >
+      {renderHeaderButtonsInRef}
       {config?.text && (
         <div
           style={{
@@ -627,52 +724,71 @@ const DynamicPad: React.FC<Props> = ({ media, config }) => {
           {config.text}
         </div>
       )}
-      <div
-        style={{
-          position: "absolute",
-          top: "16px",
-          right: "16px",
-          zIndex: 6,
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          flexWrap: "wrap",
-        }}
-      >
-        {recordingUrl && (
-          <a
-            href={recordingUrl}
-            download={recordingFilename}
+      {!headerActionsRef && (
+        <div
+          style={{
+            position: "absolute",
+            top: "16px",
+            right: "16px",
+            zIndex: 6,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            flexWrap: "wrap",
+          }}
+        >
+          {recordingUrl && (
+            <a
+              href={recordingUrl}
+              download={recordingFilename}
+              style={{
+                color: palette.text,
+                textDecoration: "none",
+                border: `1px solid ${palette.border}`,
+                padding: "8px 12px",
+                borderRadius: "999px",
+                fontSize: "12px",
+                letterSpacing: "0.3px",
+                background: "rgba(0,0,0,0.45)",
+              }}
+            >
+              Download
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() => setHoldMode((h) => !h)}
             style={{
-              color: palette.text,
-              textDecoration: "none",
               border: `1px solid ${palette.border}`,
-              padding: "8px 12px",
+              background: holdMode ? "rgba(100, 100, 255, 0.5)" : "rgba(0,0,0,0.45)",
+              color: palette.text,
+              padding: "8px 14px",
               borderRadius: "999px",
               fontSize: "12px",
               letterSpacing: "0.3px",
-              background: "rgba(0,0,0,0.45)",
+              cursor: "pointer",
             }}
           >
-            Download
-          </a>
-        )}
-        <button
-          onClick={isRecording ? stopRecording : startRecording}
-          style={{
-            border: `1px solid ${palette.border}`,
-            background: isRecording ? "rgba(255, 72, 72, 0.85)" : "rgba(0,0,0,0.45)",
-            color: palette.text,
-            padding: "8px 14px",
-            borderRadius: "999px",
-            fontSize: "12px",
-            letterSpacing: "0.3px",
-            cursor: "pointer",
-          }}
-        >
-          {isRecording ? "Stop" : "Rec"}
-        </button>
-      </div>
+            {holdMode ? "Hold on" : "Hold"}
+          </button>
+          <button
+            type="button"
+            onClick={isRecording ? stopRecording : startRecording}
+            style={{
+              border: `1px solid ${palette.border}`,
+              background: isRecording ? "rgba(255, 72, 72, 0.85)" : "rgba(0,0,0,0.45)",
+              color: palette.text,
+              padding: "8px 14px",
+              borderRadius: "999px",
+              fontSize: "12px",
+              letterSpacing: "0.3px",
+              cursor: "pointer",
+            }}
+          >
+            {isRecording ? "Stop" : "Rec"}
+          </button>
+        </div>
+      )}
       {recordError && (
         <div
           style={{

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./ProfilePage.module.css";
 import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
+import { useAuth } from "@/app/(providers)/auth-provider";
 
 type Pad = {
   id: string;
@@ -43,9 +44,11 @@ const formatDate = (value?: string | null) => {
 };
 
 const ProfilePage = ({ uid }: { uid: string }) => {
+  const { user } = useAuth();
   const [pads, setPads] = useState<Pad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isOwnProfile = user?.uid === uid;
 
   useEffect(() => {
     const load = async () => {
@@ -100,7 +103,12 @@ const ProfilePage = ({ uid }: { uid: string }) => {
       </header>
       {!hasContent && (
         <div className={styles["profile-empty"]}>
-          No uploads yet.
+          <p className={styles["profile-empty-text"]}>No uploads yet.</p>
+          {isOwnProfile && (
+            <Link className={styles["profile-empty-button"]} href="/pads/create">
+              Create pad
+            </Link>
+          )}
         </div>
       )}
 

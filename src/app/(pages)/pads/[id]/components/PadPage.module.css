@@ -13,6 +13,19 @@
   flex-wrap: wrap;
 }
 
+.pad-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pad-header-dynamic {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .pad-header h1 {
   font-size: 28px;
 }

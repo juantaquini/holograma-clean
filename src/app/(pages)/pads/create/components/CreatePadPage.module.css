@@ -61,32 +61,6 @@
   gap: 12px;
 }
 
-.pad-recorder {
-  border: 1px dashed var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
-  background: var(--lighter-bg-color);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.pad-recorder-title {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.pad-recorder-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.pad-recorder-status {
-  color: var(--text-color-secondary);
-  font-size: 14px;
-}
-
 @media (max-width: 720px) {
   .pad-create-container {
     padding: 24px 14px 60px;

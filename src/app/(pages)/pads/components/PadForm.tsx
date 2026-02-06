@@ -4,8 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/app/(providers)/auth-provider";
+import { usePopup } from "@/app/(providers)/popup-provider";
 import CustomTextInput from "@/components/inputs/CustomTextInput";
+import AudioRecorderInput from "@/components/inputs/AudioRecorderInput";
 import { MediaSection } from "@/components/media/MediaSection";
+import Login from "@/components/auth/Login";
+import Signin from "@/components/auth/Signin";
 import { usePadMedia } from "@/hooks/usePadMedia";
 import type { ExistingMedia, MediaKind } from "@/types/media";
 import { uploadMedia } from "@/lib/functions/uploadMedia";
@@ -43,8 +47,10 @@ export default function PadForm({
 }: PadFormProps) {
   const { user } = useAuth();
   const router = useRouter();
+  const { openPopup, closePopup } = usePopup();
   const [pad, setPad] = useState<PadResponse | null>(null);
   const [loading, setLoading] = useState(mode === "edit");
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState("#0b0b0b");
   const [padText, setPadText] = useState("");
@@ -86,7 +92,7 @@ export default function PadForm({
     if (user === undefined) return;
 
     if (!user) {
-      router.replace(mode === "edit" ? "/pads" : "/");
+      if (mode === "edit") router.replace("/pads");
       return;
     }
 
@@ -101,11 +107,17 @@ export default function PadForm({
     }
 
     const fetchPad = async () => {
+      setLoadError(null);
       try {
         const res = await fetch(`/api/pads/${padId}`, { cache: "no-store" });
 
         if (!res.ok) {
-          router.replace("/pads");
+          if (res.status === 404) {
+            setLoadError("Pad not found");
+          } else {
+            setLoadError("Failed to load pad");
+          }
+          setLoading(false);
           return;
         }
 
@@ -127,11 +139,13 @@ export default function PadForm({
             url: m.url,
             kind: m.kind,
             position: index,
-          })
+          }),
         );
 
         setExisting(initialMedia);
         setOrder(initialMedia.map((m) => m.id));
+      } catch (err) {
+        setLoadError(err instanceof Error ? err.message : "Failed to load pad");
       } finally {
         setLoading(false);
       }
@@ -140,9 +154,75 @@ export default function PadForm({
     fetchPad();
   }, [mode, padId, user, router, reset, setExisting, setOrder]);
 
-  if (loading) return null;
-  if (!user) return null;
-  if (mode === "edit" && !pad) return null;
+  // Cleanup recording on unmount only; must be before any conditional return (Rules of Hooks)
+  useEffect(() => {
+    return () => {
+      if (recordTimerRef.current) {
+        window.clearInterval(recordTimerRef.current);
+        recordTimerRef.current = null;
+      }
+      const recorder = mediaRecorderRef.current;
+      if (recorder && recorder.state !== "inactive") {
+        recorder.stop();
+      }
+    };
+  }, []);
+
+  if (!user) {
+    if (mode === "edit") return null;
+    const openLogin = () => {
+      openPopup(<Login isPopup onClose={closePopup} onOpenSignin={openSignin} />);
+    };
+    const openSignin = () => {
+      openPopup(<Signin isPopup onClose={closePopup} onOpenLogin={openLogin} />);
+    };
+    return (
+      <div className={styles["pad-create-container"]}>
+        <header className={styles["pad-create-header"]}>
+          <h1>Create pad</h1>
+          <p>Sign in or create an account to start making pads.</p>
+        </header>
+        <button
+          type="button"
+          className={styles["channel-create-button"]}
+          onClick={openLogin}
+        >
+          Sign in
+        </button>
+      </div>
+    );
+  }
+
+  if (mode === "edit") {
+    if (loading) {
+      return (
+        <div className={styles["pad-create-container"]}>
+          <header className={styles["pad-create-header"]}>
+            <h1>Edit pad</h1>
+            <p>Loading pad...</p>
+          </header>
+        </div>
+      );
+    }
+    if (loadError) {
+      return (
+        <div className={styles["pad-create-container"]}>
+          <header className={styles["pad-create-header"]}>
+            <h1>Edit pad</h1>
+            <p style={{ color: "var(--error-color, #c00)" }}>{loadError}</p>
+          </header>
+          <button
+            type="button"
+            className={styles["pad-create-button-secondary"]}
+            onClick={() => router.push("/pads")}
+          >
+            Back to pads
+          </button>
+        </div>
+      );
+    }
+    if (!pad) return null;
+  }
 
   const handleCancel = () => {
     if (onCancel) {
@@ -175,7 +255,7 @@ export default function PadForm({
         JSON.stringify({
           backgroundColor,
           text: padText,
-        })
+        }),
       );
 
       if (mode === "create") {
@@ -195,10 +275,7 @@ export default function PadForm({
 
         const media = existingMedia ?? addedMedia;
         if (media && media.kind) {
-          formData.append(
-            "media_ids[]",
-            JSON.stringify({ id: media.id })
-          );
+          formData.append("media_ids[]", JSON.stringify({ id: media.id }));
         }
       });
 
@@ -207,11 +284,13 @@ export default function PadForm({
         {
           method: mode === "create" ? "POST" : "PUT",
           body: formData,
-        }
+        },
       );
 
       if (!res.ok) {
-        throw new Error(mode === "create" ? "Error creating pad" : "Error updating pad");
+        throw new Error(
+          mode === "create" ? "Error creating pad" : "Error updating pad",
+        );
       }
 
       const payload = mode === "create" ? await res.json() : null;
@@ -295,19 +374,16 @@ export default function PadForm({
     }
   };
 
-  useEffect(() => {
-    return () => {
-      stopRecording();
-    };
-  }, []);
-
   return (
     <div className={styles["pad-create-container"]}>
       <header className={styles["pad-create-header"]}>
         <h1>{mode === "create" ? "Create pad" : "Edit pad"}</h1>
         {mode === "edit" && <p>Update media for this pad.</p>}
       </header>
-      <form onSubmit={handleSubmit(onSubmit)} className={styles["pad-create-form"]}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className={styles["pad-create-form"]}
+      >
         <CustomTextInput
           name="title"
           label="Title"
@@ -321,7 +397,7 @@ export default function PadForm({
               Background color
             </span>
             <input
-              className={inputStyles["custom-text-input"]}
+              className={inputStyles["custom-color-input"]}
               type="color"
               value={backgroundColor}
               onChange={(e) => setBackgroundColor(e.target.value)}
@@ -336,36 +412,6 @@ export default function PadForm({
               placeholder="Add text to your pad..."
             />
           </label>
-        </div>
-
-        <div className={styles["pad-recorder"]}>
-          <div className={styles["pad-recorder-title"]}>Record audio</div>
-          <div className={styles["pad-recorder-actions"]}>
-            <button
-              type="button"
-              className={styles["channel-create-button"]}
-              onClick={startRecording}
-              disabled={recording}
-            >
-              {recording ? "Recording..." : "Start recording"}
-            </button>
-            <button
-              type="button"
-              className={styles["pad-create-button-secondary"]}
-              onClick={stopRecording}
-              disabled={!recording}
-            >
-              Stop
-            </button>
-          </div>
-          <div className={styles["pad-recorder-status"]}>
-            {recording
-              ? `Recording... ${recordSecondsLeft}s left`
-              : "Up to 60 seconds. Tap start to record."}
-          </div>
-          {recordError && (
-            <div className={styles["pad-recorder-status"]}>{recordError}</div>
-          )}
         </div>
 
         <div className={styles["pad-create-grid"]}>
@@ -392,17 +438,26 @@ export default function PadForm({
             addFiles={addFiles}
           />
         </div>
-        <MediaSection
-          title="Songs"
-          kind={"audio" as MediaKind}
-          existing={existing}
-          added={added}
-          order={order}
-          setOrder={setOrder}
-          removeExisting={removeExisting}
-          removeAdded={removeAdded}
-          addFiles={addFiles}
-        />
+        <div className={styles["pad-create-grid"]}>
+          <MediaSection
+            title="Audios"
+            kind={"audio" as MediaKind}
+            existing={existing}
+            added={added}
+            order={order}
+            setOrder={setOrder}
+            removeExisting={removeExisting}
+            removeAdded={removeAdded}
+            addFiles={addFiles}
+          />
+          <AudioRecorderInput
+            recording={recording}
+            recordSecondsLeft={recordSecondsLeft}
+            recordError={recordError}
+            onStartRecording={startRecording}
+            onStopRecording={stopRecording}
+          />
+        </div>
 
         <div className={styles["pad-create-actions"]}>
           <button
@@ -423,8 +478,8 @@ export default function PadForm({
                 ? "Creating..."
                 : "Saving..."
               : mode === "create"
-              ? "Create pad"
-              : "Save changes"}
+                ? "Create pad"
+                : "Save changes"}
           </button>
         </div>
       </form>

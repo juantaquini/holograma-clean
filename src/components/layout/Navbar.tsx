@@ -12,6 +12,7 @@ import { useColorTheme } from "@/app/(providers)/color-theme-provider";
 import { colorPalettes, type ThemeName } from "@/lib/color-palettes";
 import Login from "@/components/auth/Login";
 import Signin from "@/components/auth/Signin";
+import { GiFallingStar } from "react-icons/gi";
 
 const isMobile = () => window.innerWidth <= 1000;
 
@@ -79,7 +80,7 @@ export default function Navbar() {
 
   const availableThemes = useMemo(
     () => Object.keys(colorPalettes) as ThemeName[],
-    []
+    [],
   );
 
   /* ---------------- RENDER ---------------- */
@@ -93,25 +94,26 @@ export default function Navbar() {
           </Link>
 
           <div className={styles["navbar-mobile-actions"]}>
-            {user?.uid && (
-              <Link className={styles["navbar-create-pad"]} href="/pads/create">
-                Create pad
-              </Link>
-            )}
             {user ? (
               <button
                 className={styles["navbar-avatar"]}
                 onClick={() => setMenuOpen((o) => !o)}
                 aria-label="Open menu"
               >
-                <VscStarEmpty size={20} />
-              </button>
+                <GiFallingStar size={20} />
+                </button>
             ) : (
               <div className={styles["navbar-auth-actions"]}>
-                <button className={styles["navbar-auth-button"]} onClick={openLogin}>
+                <button
+                  className={styles["navbar-auth-button"]}
+                  onClick={openLogin}
+                >
                   Login
                 </button>
-                <button className={styles["navbar-auth-button"]} onClick={openSignin}>
+                <button
+                  className={styles["navbar-auth-button"]}
+                  onClick={openSignin}
+                >
                   Signin
                 </button>
               </div>
@@ -127,25 +129,26 @@ export default function Navbar() {
           </Link>
 
           <div className={styles["navbar-actions"]}>
-            {user?.uid && (
-              <Link className={styles["navbar-create-pad"]} href="/pads/create">
-                Create pad
-              </Link>
-            )}
             {user ? (
               <button
                 className={styles["navbar-avatar"]}
                 onClick={() => setMenuOpen((o) => !o)}
                 aria-label="Open menu"
               >
-                <VscStarEmpty size={20} />
+                <GiFallingStar size={20} />
               </button>
             ) : (
               <div className={styles["navbar-auth-actions"]}>
-                <button className={styles["navbar-auth-button"]} onClick={openLogin}>
+                <button
+                  className={styles["navbar-auth-button"]}
+                  onClick={openLogin}
+                >
                   Login
                 </button>
-                <button className={styles["navbar-auth-button"]} onClick={openSignin}>
+                <button
+                  className={styles["navbar-auth-button"]}
+                  onClick={openSignin}
+                >
                   Signin
                 </button>
               </div>
@@ -177,9 +180,6 @@ export default function Navbar() {
               </Link>
               {user?.uid && (
                 <>
-                  <Link href="/pads/create" onClick={handleLinkClick}>
-                    Create pad
-                  </Link>
                   <Link href={`/feed/${user.uid}`} onClick={handleLinkClick}>
                     Your feed
                   </Link>

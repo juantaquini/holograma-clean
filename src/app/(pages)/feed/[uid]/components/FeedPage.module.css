@@ -121,7 +121,7 @@
 .feed-channel-placeholder {
   width: 100%;
   height: 100%;
-  border: 1px solid var(--text-color);
+  border: 1px dashed var(--text-color);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -156,6 +156,48 @@
   padding: 20px;
   text-align: center;
   color: var(--text-color-secondary);
+}
+
+.feed-empty-text {
+  margin: 0 0 16px;
+}
+
+.feed-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.feed-empty-button,
+.feed-empty-button-secondary {
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.feed-empty-button {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border: none;
+}
+
+.feed-empty-button:hover {
+  opacity: 0.9;
+}
+
+.feed-empty-button-secondary {
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1.5px dashed var(--border-color);
+}
+
+.feed-empty-button-secondary:hover {
+  opacity: 0.9;
 }
 
 @media (max-width: 720px) {

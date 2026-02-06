@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./ExplorePage.module.css";
 import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
+import { useAuth } from "@/app/(providers)/auth-provider";
 
 
 type Channel = {
@@ -82,6 +83,7 @@ const PADS_QUERY = `
 `;
 
 const ExplorePage = () => {
+  const { user } = useAuth();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [pads, setPads] = useState<Pad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -134,7 +136,14 @@ const ExplorePage = () => {
       <section className={styles["explore-section"]}>
         <div className={styles["explore-section-title"]}>Channels</div>
         {channels.length === 0 && (
-          <div className={styles["explore-empty"]}>No channels yet.</div>
+          <div className={styles["explore-empty"]}>
+            <p className={styles["explore-empty-text"]}>No channels yet.</p>
+            {user && (
+              <Link className={styles["explore-empty-button"]} href="/channels/create">
+                Create channel
+              </Link>
+            )}
+          </div>
         )}
         {!!channels.length && (
           <div className={styles["explore-grid"]}>
@@ -178,7 +187,14 @@ const ExplorePage = () => {
       <section className={styles["explore-section"]}>
         <div className={styles["explore-section-title"]}>Pads</div>
         {pads.length === 0 && (
-          <div className={styles["explore-empty"]}>No pads yet.</div>
+          <div className={styles["explore-empty"]}>
+            <p className={styles["explore-empty-text"]}>No pads yet.</p>
+            {user && (
+              <Link className={styles["explore-empty-button"]} href="/pads/create">
+                Create pad
+              </Link>
+            )}
+          </div>
         )}
         {!!pads.length && (
           <div className={styles["explore-grid"]}>

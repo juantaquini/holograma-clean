@@ -34,11 +34,11 @@ export default function RootLayout({
                 <Navbar />
                 <Subnav />
                 {children}
+                <Footer />
               </PopupProvider>
             </ColorThemeProvider>
           </AuthContextProvider>
         </div>
-        <Footer />
       </body>
     </html>
   );

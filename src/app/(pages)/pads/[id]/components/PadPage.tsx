@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import styles from "./PadPage.module.css";
 import DynamicPad from "@/components/pads/DynamicPad";
@@ -27,6 +27,7 @@ type Pad = {
 
 export default function PadPage({ id }: { id: string }) {
   const { user } = useAuth();
+  const headerActionsRef = useRef<HTMLDivElement>(null);
   const [pad, setPad] = useState<Pad | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,14 +72,21 @@ export default function PadPage({ id }: { id: string }) {
     <div className={styles["pad-container"]}>
       <header className={styles["pad-header"]}>
         <h4>{pad.title}</h4>
-        {user?.uid === pad.ownerUid && (
-          <Link className={styles["pad-link"]} href={`/pads/${pad.id}/edit`}>
-            Edit pad
-          </Link>
-        )}
+        <div className={styles["pad-header-actions"]}>
+          {user?.uid === pad.ownerUid && (
+            <Link className={styles["pad-link"]} href={`/pads/${pad.id}/edit`}>
+              Edit pad
+            </Link>
+          )}
+          <div ref={headerActionsRef} className={styles["pad-header-dynamic"]} />
+        </div>
       </header>
 
-      <DynamicPad media={pad.media ?? []} config={pad.config} />
+      <DynamicPad
+        media={pad.media ?? []}
+        config={pad.config}
+        headerActionsRef={headerActionsRef}
+      />
     </div>
   );
 }

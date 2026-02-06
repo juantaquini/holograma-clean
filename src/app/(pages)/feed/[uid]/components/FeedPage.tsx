@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./FeedPage.module.css";
 import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
+import { useAuth } from "@/app/(providers)/auth-provider";
 
 type Pad = {
   id: string;
@@ -71,10 +72,12 @@ const CHANNELS_QUERY = `
 `;
 
 const FeedPage = ({ uid }: { uid: string }) => {
+  const { user } = useAuth();
   const [pads, setPads] = useState<Pad[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isOwnFeed = user?.uid === uid;
 
   useEffect(() => {
     const load = async () => {
@@ -140,7 +143,19 @@ const FeedPage = ({ uid }: { uid: string }) => {
   return (
     <div className={styles["feed-container"]}>
       {channels.length === 0 && pads.length === 0 && (
-        <div className={styles["feed-empty"]}>No content yet.</div>
+        <div className={styles["feed-empty"]}>
+          <p className={styles["feed-empty-text"]}>No content yet.</p>
+          {isOwnFeed && (
+            <div className={styles["feed-empty-actions"]}>
+              <Link className={styles["feed-empty-button"]} href="/pads/create">
+                Create pad
+              </Link>
+              <Link className={styles["feed-empty-button-secondary"]} href="/channels/create">
+                Create channel
+              </Link>
+            </div>
+          )}
+        </div>
       )}
 
       {!!channels.length && (

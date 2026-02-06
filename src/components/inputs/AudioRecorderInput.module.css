@@ -1,0 +1,81 @@
+.recorderInner {
+  border: 1.5px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--lighter-bg-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 170px;
+  width: 100%;
+}
+
+.recorderActions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recorderStatus {
+  color: var(--text-color-secondary);
+  font-size: 14px;
+}
+
+.recorderButtonMic {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.recorderButtonMic:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.recorderButtonMic:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.recorderButtonMicActive {
+  background-color: #c00;
+  color: #fff;
+  animation: recorderPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes recorderPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(204, 0, 0, 0);
+  }
+}
+
+.recorderButtonSecondary {
+  padding: 0.5rem 1rem;
+  border-radius: 32px;
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1px dashed var(--border-color);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: opacity 0.3s;
+}
+
+.recorderButtonSecondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
