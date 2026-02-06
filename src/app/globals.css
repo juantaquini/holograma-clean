@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+/* Tema por defecto (light) hasta que el provider aplique el elegido */
+:root {
+  --bg: #F5F5F5;
+  --text: #072A60;
+  --text-secondary: #1976D2;
+  --border: #303F9F;
+  --lighter-bg: #f4f4ddff;
+  --button: #0d585aff;
+  --opacity-neutral: #20437888;
+  --bg-color: #F5F5F5;
+  --text-color: #072A60;
+  --text-color-secondary: #1976D2;
+  --border-color: #303F9F;
+  --lighter-bg-color: #f4f4ddff;
+  --button-color: #0d585aff;
+  --opacity-neutral-color: #20437888;
+}
+
 *,
 *::before,
 *::after {
