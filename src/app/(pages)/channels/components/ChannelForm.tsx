@@ -196,7 +196,7 @@ export default function ChannelForm({
             className={styles["channel-create-input"]}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Let there be light"
+            placeholder="Channel title"
             required
           />
         </label>
@@ -207,7 +207,7 @@ export default function ChannelForm({
             className={styles["channel-create-input"]}
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
-            placeholder="let-there-be-light"
+            placeholder="channel-slug"
             required
           />
         </label>

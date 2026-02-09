@@ -26,9 +26,8 @@
 }
 
 .navbar-auth-button {
-  border: 1px dashed var(--border-color);
-  background: transparent;
-  color: var(--text-color);
+  background: var(--text-color);
+  color: var(--bg-color);
   padding: 10px 16px;
   border-radius: 999px;
   cursor: pointer;
@@ -98,7 +97,6 @@
   color: var(--text-color);
   cursor: pointer;
 }
-
 
 .navbar-overlay {
   position: fixed;
@@ -172,17 +170,38 @@
 
 .navbar-sidebar-footer {
   margin-top: auto;
+  margin-left: auto;
 }
 
 .navbar-sidebar-footer button {
-  border: 1px dashed var(--border-color);
-  background: transparent;
-  color: inherit;
+  background: var(--text-color);
+  color: var(--bg-color);
   padding: 10px 16px;
   border-radius: 999px;
   cursor: pointer;
   font-size: 12px;
   letter-spacing: 0.4px;
+}
+
+.navbar-sidebar-auth-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.navbar-sidebar-auth-btn {
+  background: var(--text-color);
+  color: var(--bg-color);
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.navbar-sidebar-auth-btn:hover {
+  opacity: 0.9;
 }
 
 .navbar-theme-section {
@@ -205,15 +224,16 @@
 }
 
 .navbar-theme-button {
-  border: 1px dashed var(--border-color);
-  background: transparent;
-  color: inherit;
+  background: var(--text-color);
+  color: var(--bg-color);
   padding: 8px 12px;
   border-radius: 999px;
   cursor: pointer;
   font-size: 12px;
   letter-spacing: 0.3px;
-  transition: opacity 0.2s, border-color 0.2s;
+  transition:
+    opacity 0.2s,
+    border-color 0.2s;
   text-transform: uppercase;
 }
 

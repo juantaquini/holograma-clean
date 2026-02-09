@@ -6,6 +6,7 @@ import Image from "next/image";
 import styles from "./ChannelPage.module.css";
 import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
 import { useAuth } from "@/app/(providers)/auth-provider";
+import LoadingSketch from "@/components/p5/loading/LoadingSketch";
 
 type Channel = {
   id: string;
@@ -104,9 +105,7 @@ const ChannelPage = ({ uid, channelSlug }: { uid: string; channelSlug: string })
 
   if (isLoading) {
     return (
-      <div className={styles["channel-container"]}>
-        <div className={styles["channel-loading"]}>Loading channel…</div>
-      </div>
+      <LoadingSketch/>
     );
   }
 

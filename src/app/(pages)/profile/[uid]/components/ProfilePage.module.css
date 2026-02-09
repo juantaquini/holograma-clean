@@ -34,12 +34,6 @@
   letter-spacing: 0.4px;
 }
 
-.profile-feed-link:hover {
-  text-decoration: underline;
-  text-decoration-style: dashed;
-  text-underline-offset: 4px;
-}
-
 .profile-actions {
   display: flex;
   gap: 12px;

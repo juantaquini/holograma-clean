@@ -19,12 +19,6 @@
   letter-spacing: 0.4px;
 }
 
-.subnav-link:hover {
-  text-decoration: underline;
-  text-decoration-style: dashed;
-  text-underline-offset: 4px;
-}
-
 .subnav-link-disabled {
   font-size: 13px;
   letter-spacing: 0.4px;
@@ -32,12 +26,9 @@
 }
 
 .subnav-separator {
-  color: var(--text-color-secondary);
-  font-size: 12px;
-}
-
-@media (max-width: 900px) {
-  .subnav {
-    margin-top: 80px;
-  }
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--text-color);
+  flex-shrink: 0;
 }

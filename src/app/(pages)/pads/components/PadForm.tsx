@@ -15,6 +15,7 @@ import type { ExistingMedia, MediaKind } from "@/types/media";
 import { uploadMedia } from "@/lib/functions/uploadMedia";
 import styles from "@/app/(pages)/pads/create/components/CreatePadPage.module.css";
 import inputStyles from "@/components/inputs/InputStyles.module.css";
+import LoadingSketch from "@/components/p5/loading/LoadingSketch";
 
 type PadResponse = {
   id: string;
@@ -171,10 +172,14 @@ export default function PadForm({
   if (!user) {
     if (mode === "edit") return null;
     const openLogin = () => {
-      openPopup(<Login isPopup onClose={closePopup} onOpenSignin={openSignin} />);
+      openPopup(
+        <Login isPopup onClose={closePopup} onOpenSignin={openSignin} />,
+      );
     };
     const openSignin = () => {
-      openPopup(<Signin isPopup onClose={closePopup} onOpenLogin={openLogin} />);
+      openPopup(
+        <Signin isPopup onClose={closePopup} onOpenLogin={openLogin} />,
+      );
     };
     return (
       <div className={styles["pad-create-container"]}>
@@ -187,7 +192,7 @@ export default function PadForm({
           className={styles["channel-create-button"]}
           onClick={openLogin}
         >
-          Sign in
+          Log in
         </button>
       </div>
     );
@@ -195,22 +200,11 @@ export default function PadForm({
 
   if (mode === "edit") {
     if (loading) {
-      return (
-        <div className={styles["pad-create-container"]}>
-          <header className={styles["pad-create-header"]}>
-            <h1>Edit pad</h1>
-            <p>Loading pad...</p>
-          </header>
-        </div>
-      );
+      return <LoadingSketch />;
     }
     if (loadError) {
       return (
         <div className={styles["pad-create-container"]}>
-          <header className={styles["pad-create-header"]}>
-            <h1>Edit pad</h1>
-            <p style={{ color: "var(--error-color, #c00)" }}>{loadError}</p>
-          </header>
           <button
             type="button"
             className={styles["pad-create-button-secondary"]}
@@ -376,10 +370,6 @@ export default function PadForm({
 
   return (
     <div className={styles["pad-create-container"]}>
-      <header className={styles["pad-create-header"]}>
-        <h1>{mode === "create" ? "Create pad" : "Edit pad"}</h1>
-        {mode === "edit" && <p>Update media for this pad.</p>}
-      </header>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className={styles["pad-create-form"]}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import styles from "./PadPage.module.css";
 import DynamicPad from "@/components/pads/DynamicPad";
 import { useAuth } from "@/app/(providers)/auth-provider";
+import LoadingSketch from "@/components/p5/loading/LoadingSketch";
 
 type Pad = {
   id: string;
@@ -51,9 +52,7 @@ export default function PadPage({ id }: { id: string }) {
 
   if (isLoading) {
     return (
-      <div className={styles["pad-container"]}>
-        <div className={styles["pad-loading"]}>Loading pad…</div>
-      </div>
+<LoadingSketch/>
     );
   }
 
@@ -61,7 +60,7 @@ export default function PadPage({ id }: { id: string }) {
     return (
       <div className={styles["pad-container"]}>
         <div className={styles["pad-error"]}>{error || "Pad not found."}</div>
-        <Link href="/explore" className={styles["pad-link"]}>
+        <Link href="/explore" className={styles["button-secondary"]}>
           Back to explore
         </Link>
       </div>
@@ -71,15 +70,14 @@ export default function PadPage({ id }: { id: string }) {
   return (
     <div className={styles["pad-container"]}>
       <header className={styles["pad-header"]}>
-        <h4>{pad.title}</h4>
-        <div className={styles["pad-header-actions"]}>
+        <div className={styles["pad-title-row"]}>
           {user?.uid === pad.ownerUid && (
-            <Link className={styles["pad-link"]} href={`/pads/${pad.id}/edit`}>
+            <Link className={styles["button-secondary"]} href={`/pads/${pad.id}/edit`}>
               Edit pad
             </Link>
           )}
-          <div ref={headerActionsRef} className={styles["pad-header-dynamic"]} />
         </div>
+        <div ref={headerActionsRef} className={styles["pad-header-dynamic"]} />
       </header>
 
       <DynamicPad

@@ -112,6 +112,16 @@ button {
   align-items: center;
 }
 
+/* Bloque principal: siempre ≥ 100vh para que el footer quede debajo */
+.app-main {
+  flex: 1 0 auto;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 
 @media (max-width: 720px) {
   .app-content {

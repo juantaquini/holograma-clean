@@ -67,12 +67,6 @@
   letter-spacing: 0.4px;
 }
 
-.feed-section-link:hover {
-  text-decoration: underline;
-  text-decoration-style: dashed;
-  text-underline-offset: 4px;
-}
-
 .feed-card {
   overflow: hidden;
   text-decoration: none;

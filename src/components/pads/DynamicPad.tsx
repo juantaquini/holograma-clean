@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useColorTheme } from "@/app/(providers)/color-theme-provider";
 import { colorPalettes } from "@/lib/color-palettes";
+import styles from "./DynamicPad.module.css";
 
 type PadMedia = {
   id: string;
@@ -73,7 +74,6 @@ const DynamicPad: React.FC<Props> = ({ media, config, headerActionsRef }) => {
   const [Sketch, setSketch] = useState<any>(null);
   const [p5SoundLoaded, setP5SoundLoaded] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const [showHelp, setShowHelp] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
   const [recordingFilename, setRecordingFilename] = useState<string>(
@@ -166,26 +166,6 @@ const DynamicPad: React.FC<Props> = ({ media, config, headerActionsRef }) => {
   useEffect(() => {
     setIsMobile(/android|iphone|ipad/i.test(navigator.userAgent));
   }, []);
-
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem("dynamicPadHelpDismissed");
-      if (stored === "true") setShowHelp(false);
-    } catch {}
-  }, []);
-
-  const dismissHelp = () => {
-    if (p5Instance.current?.userStartAudio && !audioUnlockedRef.current) {
-      try {
-        p5Instance.current.userStartAudio();
-        audioUnlockedRef.current = true;
-      } catch {}
-    }
-    setShowHelp(false);
-    try {
-      window.localStorage.setItem("dynamicPadHelpDismissed", "true");
-    } catch {}
-  };
 
   useEffect(() => {
     return () => {
@@ -620,27 +600,13 @@ const DynamicPad: React.FC<Props> = ({ media, config, headerActionsRef }) => {
     }
   };
 
-  const buttonStyle = {
-    border: `1px solid ${palette.border}`,
-    color: palette.text,
-    padding: "8px 14px",
-    borderRadius: "999px",
-    fontSize: "12px",
-    letterSpacing: "0.3px",
-    cursor: "pointer" as const,
-    background: "rgba(0,0,0,0.45)",
-  };
-
   const headerButtonsContent = (
     <>
       {recordingUrl && (
         <a
           href={recordingUrl}
           download={recordingFilename}
-          style={{
-            ...buttonStyle,
-            textDecoration: "none",
-          }}
+          className={styles["button"]}
         >
           Download
         </a>
@@ -648,20 +614,14 @@ const DynamicPad: React.FC<Props> = ({ media, config, headerActionsRef }) => {
       <button
         type="button"
         onClick={() => setHoldMode((h) => !h)}
-        style={{
-          ...buttonStyle,
-          background: holdMode ? "rgba(100, 100, 255, 0.5)" : buttonStyle.background,
-        }}
+        className={`${styles["button-secondary"]} ${holdMode ? styles["button-hold-active"] : ""}`}
       >
-        {holdMode ? "Hold on" : "Hold"}
+        {holdMode ? "Holding" : "Hold"}
       </button>
       <button
         type="button"
         onClick={isRecording ? stopRecording : startRecording}
-        style={{
-          ...buttonStyle,
-          background: isRecording ? "rgba(255, 72, 72, 0.85)" : buttonStyle.background,
-        }}
+        className={`${styles["button-secondary"]} ${isRecording ? styles["button-recording"] : ""}`}
       >
         {isRecording ? "Stop" : "Rec"}
       </button>
@@ -675,82 +635,28 @@ const DynamicPad: React.FC<Props> = ({ media, config, headerActionsRef }) => {
 
   if (!Sketch || !p5SoundLoaded) {
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "400px",
-          color: palette.text_secondary,
-        }}
-      >
+      <div className={styles["loading"]}>
         Loading audio engine...
       </div>
     );
   }
 
+  const keyHintText = isMobile
+    ? "Tap + hold, slide to switch"
+    : `Keys: ${KEYS.slice(0, Math.max(1, media.length))
+        .map((c) => String.fromCharCode(c))
+        .join(", ")}`;
+
   return (
-    <div
-      style={{
-        userSelect: "none",
-        WebkitUserSelect: "none",
-        MozUserSelect: "none",
-        msUserSelect: "none",
-        WebkitTouchCallout: "none",
-        WebkitTapHighlightColor: "transparent",
-        touchAction: "none",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
+    <div className={styles["root"]}>
       {renderHeaderButtonsInRef}
-      {config?.text && (
-        <div
-          style={{
-            position: "absolute",
-            top: "16px",
-            left: "16px",
-            zIndex: 6,
-            maxWidth: "320px",
-            color: palette.text,
-            background: "rgba(0,0,0,0.55)",
-            border: `1px solid ${palette.border}`,
-            padding: "10px 12px",
-            borderRadius: "12px",
-            fontSize: "14px",
-            lineHeight: 1.4,
-          }}
-        >
-          {config.text}
-        </div>
-      )}
       {!headerActionsRef && (
-        <div
-          style={{
-            position: "absolute",
-            top: "16px",
-            right: "16px",
-            zIndex: 6,
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            flexWrap: "wrap",
-          }}
-        >
+        <div className={styles["header-buttons"]}>
           {recordingUrl && (
             <a
               href={recordingUrl}
               download={recordingFilename}
-              style={{
-                color: palette.text,
-                textDecoration: "none",
-                border: `1px solid ${palette.border}`,
-                padding: "8px 12px",
-                borderRadius: "999px",
-                fontSize: "12px",
-                letterSpacing: "0.3px",
-                background: "rgba(0,0,0,0.45)",
-              }}
+              className={styles["button"]}
             >
               Download
             </a>
@@ -758,208 +664,28 @@ const DynamicPad: React.FC<Props> = ({ media, config, headerActionsRef }) => {
           <button
             type="button"
             onClick={() => setHoldMode((h) => !h)}
-            style={{
-              border: `1px solid ${palette.border}`,
-              background: holdMode ? "rgba(100, 100, 255, 0.5)" : "rgba(0,0,0,0.45)",
-              color: palette.text,
-              padding: "8px 14px",
-              borderRadius: "999px",
-              fontSize: "12px",
-              letterSpacing: "0.3px",
-              cursor: "pointer",
-            }}
+            className={`${styles["button"]} ${holdMode ? styles["button-hold-active"] : ""}`}
           >
             {holdMode ? "Hold on" : "Hold"}
           </button>
           <button
             type="button"
             onClick={isRecording ? stopRecording : startRecording}
-            style={{
-              border: `1px solid ${palette.border}`,
-              background: isRecording ? "rgba(255, 72, 72, 0.85)" : "rgba(0,0,0,0.45)",
-              color: palette.text,
-              padding: "8px 14px",
-              borderRadius: "999px",
-              fontSize: "12px",
-              letterSpacing: "0.3px",
-              cursor: "pointer",
-            }}
+            className={`${styles["button-secondary"]} ${isRecording ? styles["button-recording"] : ""}`}
           >
             {isRecording ? "Stop" : "Rec"}
           </button>
         </div>
       )}
       {recordError && (
-        <div
-          style={{
-            position: "absolute",
-            top: "64px",
-            right: "16px",
-            zIndex: 6,
-            background: "rgba(0,0,0,0.6)",
-            color: palette.text_secondary,
-            border: `1px solid ${palette.border}`,
-            padding: "8px 12px",
-            borderRadius: "10px",
-            fontSize: "12px",
-            maxWidth: "240px",
-          }}
-        >
+        <div className={styles["record-error"]}>
           {recordError}
         </div>
       )}
-      {isReady && showHelp && (
-        <div
-          style={{
-            position: "absolute",
-            inset: "16px",
-            zIndex: 5,
-            pointerEvents: "none",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: "16px",
-              flexWrap: "wrap",
-            }}
-          >
-            <div
-              style={{
-                background: "rgba(0,0,0,0.55)",
-                color: palette.text,
-                padding: "12px 14px",
-                borderRadius: "14px",
-                border: `1px solid ${palette.border}`,
-                maxWidth: isMobile ? "100%" : "320px",
-                fontSize: "14px",
-                letterSpacing: "0.3px",
-              }}
-            >
-              <div style={{ fontWeight: 600, marginBottom: "6px" }}>
-                Dynamic Pad
-              </div>
-              <div>
-                {isMobile
-                  ? "Tap and hold any quadrant to trigger a layer. Slide to switch. Lift your finger to fade out."
-                  : "Press and hold K, B, S, H to trigger layers. Release to fade out. Try two keys at once."}
-              </div>
-            </div>
-            <button
-              onClick={dismissHelp}
-              style={{
-                pointerEvents: "auto",
-                background: "rgba(0,0,0,0.55)",
-                color: palette.text,
-                border: `1px solid ${palette.border}`,
-                borderRadius: "999px",
-                padding: "8px 14px",
-                fontSize: "12px",
-                letterSpacing: "0.4px",
-                height: "fit-content",
-              }}
-            >
-              Got it
-            </button>
-          </div>
-
-          <div style={{ position: "relative", height: "100%" }}>
-            <svg
-              width="100%"
-              height="100%"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              style={{ position: "absolute", inset: 0, opacity: 0.8 }}
-            >
-              <line
-                x1="50"
-                y1="6"
-                x2="50"
-                y2="94"
-                stroke={palette.text_secondary}
-                strokeWidth="0.3"
-                strokeDasharray="1,1.2"
-              />
-              <line
-                x1="8"
-                y1="50"
-                x2="92"
-                y2="50"
-                stroke={palette.text_secondary}
-                strokeWidth="0.3"
-                strokeDasharray="1,1.2"
-              />
-            </svg>
-            {!isMobile && (
-              <>
-                {(() => {
-                  const padCount = Math.max(1, sounds.current.length);
-                  const cols = Math.ceil(Math.sqrt(padCount));
-                  const rows = Math.ceil(padCount / cols);
-                  const cells = Array.from({ length: padCount });
-                  return cells.map((_, i) => {
-                    const col = i % cols;
-                    const row = Math.floor(i / cols);
-                    const x = ((col + 0.5) / cols) * 100;
-                    const y = ((row + 0.5) / rows) * 100;
-                    const key = KEYS[i] ? String.fromCharCode(KEYS[i]) : "";
-                    return (
-                      <div
-                        key={`key-${i}`}
-                        style={{
-                          position: "absolute",
-                          left: `${x}%`,
-                          top: `${y}%`,
-                          transform: "translate(-50%, -50%)",
-                          fontSize: "12px",
-                          color: palette.text_secondary,
-                          letterSpacing: "0.4px",
-                        }}
-                      >
-                        {key}
-                      </div>
-                    );
-                  });
-                })()}
-              </>
-            )}
-            {isMobile && (
-              <>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "12%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    fontSize: "12px",
-                    color: palette.text_secondary,
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Tap + Hold
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "12%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    fontSize: "12px",
-                    color: palette.text_secondary,
-                    letterSpacing: "0.4px",
-                  }}
-                >
-                  Slide to Switch
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <div className={styles["config-text"]}>
+        {config?.text && <span className={styles["config-text-pad"]}>{config.text}</span>}
+        <span className={styles["help-keys-text"]}>{keyHintText}</span>
+      </div>
       <style jsx global>{`
         canvas {
           user-select: none !important;
@@ -979,38 +705,9 @@ const DynamicPad: React.FC<Props> = ({ media, config, headerActionsRef }) => {
       `}</style>
       <Sketch preload={preload} setup={setup} draw={draw} windowResized={windowResized} />
       {isMobile && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            zIndex: 2,
-          }}
-        >
-          <span
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: 0,
-              bottom: 0,
-              width: "2px",
-              background: palette.text_secondary,
-              opacity: 0.8,
-              transform: "translateX(-1px)",
-            }}
-          />
-          <span
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: 0,
-              right: 0,
-              height: "2px",
-              background: palette.text_secondary,
-              opacity: 0.8,
-              transform: "translateY(-1px)",
-            }}
-          />
+        <div className={styles["mobile-overlay"]}>
+          <span className={styles["mobile-divider-v"]} />
+          <span className={styles["mobile-divider-h"]} />
         </div>
       )}
     </div>

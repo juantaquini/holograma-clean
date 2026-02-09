@@ -94,30 +94,13 @@ export default function Navbar() {
           </Link>
 
           <div className={styles["navbar-mobile-actions"]}>
-            {user ? (
-              <button
-                className={styles["navbar-avatar"]}
-                onClick={() => setMenuOpen((o) => !o)}
-                aria-label="Open menu"
-              >
-                <GiFallingStar size={20} />
-                </button>
-            ) : (
-              <div className={styles["navbar-auth-actions"]}>
-                <button
-                  className={styles["navbar-auth-button"]}
-                  onClick={openLogin}
-                >
-                  Login
-                </button>
-                <button
-                  className={styles["navbar-auth-button"]}
-                  onClick={openSignin}
-                >
-                  Signin
-                </button>
-              </div>
-            )}
+            <button
+              className={styles["navbar-avatar"]}
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Open menu"
+            >
+              <GiFallingStar size={20} />
+            </button>
           </div>
         </div>
       )}
@@ -143,13 +126,13 @@ export default function Navbar() {
                   className={styles["navbar-auth-button"]}
                   onClick={openLogin}
                 >
-                  Login
+                  Log in
                 </button>
                 <button
                   className={styles["navbar-auth-button"]}
                   onClick={openSignin}
                 >
-                  Signin
+                  Sign up
                 </button>
               </div>
             )}
@@ -157,7 +140,7 @@ export default function Navbar() {
         </nav>
       )}
 
-      {menuOpen && user && (
+      {menuOpen && (
         <>
           <div
             className={styles["navbar-overlay"]}
@@ -215,14 +198,26 @@ export default function Navbar() {
 
             <div className={styles["navbar-sidebar-footer"]}>
               {!user ? (
-                <button
-                  onClick={() => {
-                    handleLinkClick();
-                    openLogin();
-                  }}
-                >
-                  Log in
-                </button>
+                <div className={styles["navbar-sidebar-auth-buttons"]}>
+                  <button
+                    className={styles["navbar-sidebar-auth-btn"]}
+                    onClick={() => {
+                      handleLinkClick();
+                      openLogin();
+                    }}
+                  >
+                    Log in
+                  </button>
+                  <button
+                    className={styles["navbar-sidebar-auth-btn"]}
+                    onClick={() => {
+                      handleLinkClick();
+                      openSignin();
+                    }}
+                  >
+                    Sign up
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={async () => {

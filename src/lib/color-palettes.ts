@@ -14,14 +14,14 @@ export type ColorPalette = {
 };
 
 export const colorPalettes: Record<string, ColorPalette> = {
-  dark: {
-    background: "#040410ff",
-    lighter_bg: "#303F9F",
-    text: "#F8EAF6",
-    text_secondary: "#FFB3B3",
-    border: "#E91E63",
-    button: "#E91E63",
-    opacity_neutral: "#f8eaf699"
+  dusk: {
+    background: "#11323dff",
+    lighter_bg: "#245869ff",
+    text: "#ffffffff",
+    text_secondary: "#ffd6d6ff",
+    border: "#ffffffff",
+    button: "#ffffffff",
+    opacity_neutral: "#ffd3f899"
   },
   light: {
     background: "#F5F5F5",

@@ -26,6 +26,7 @@
 
 .channel-header p {
   color: var(--text-color-secondary);
+  font-size: 14px;
 }
 
 .channel-meta {
@@ -45,12 +46,15 @@
   color: var(--text-color);
   font-size: 12px;
   letter-spacing: 0.4px;
-}
-
-.channel-action:hover {
-  text-decoration: underline;
-  text-decoration-style: dashed;
-  text-underline-offset: 4px;
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
 .channel-cover {

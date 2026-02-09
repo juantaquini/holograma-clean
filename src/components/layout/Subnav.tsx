@@ -40,11 +40,10 @@ export default function Subnav() {
   const [channelOwner, setChannelOwner] = useState<string | null>(null);
 
   const feedHref = user?.uid ? `/feed/${user.uid}` : null;
-  const profileHref = user?.uid ? `/profile/${user.uid}` : null;
 
   const channelMatch = useMemo(() => {
     const parts = pathname.split("/").filter(Boolean);
-    if (parts[0] !== "u" || parts.length < 3) return null;
+    if (parts[0] !== "channels" || parts.length < 3) return null;
     return { uid: parts[1], slug: parts[2] };
   }, [pathname]);
 
@@ -64,9 +63,9 @@ export default function Subnav() {
         if (!cancelled) {
           setChannelName(data.channelBySlug?.title ?? null);
           setChannelOwner(
-            data.channelBySlug?.owner?.displayName ||
-              data.channelBySlug?.owner?.uid ||
-              data.channelBySlug?.ownerUid ||
+            data.channelBySlug?.owner?.displayName ??
+              data.channelBySlug?.owner?.uid ??
+              data.channelBySlug?.ownerUid ??
               channelMatch.uid
           );
         }
@@ -83,6 +82,8 @@ export default function Subnav() {
     };
   }, [channelMatch]);
 
+
+
   if (channelName && channelOwner) {
     return (
       <nav className={styles["subnav"]}>
@@ -90,9 +91,9 @@ export default function Subnav() {
           <Link className={styles["subnav-link"]} href="/">
             Holograma
           </Link>
-          <span className={styles["subnav-separator"]}>/</span>
+          <span className={styles["subnav-separator"]}/>
           <span className={styles["subnav-link"]}>{channelOwner}</span>
-          <span className={styles["subnav-separator"]}>/</span>
+          <span className={styles["subnav-separator"]}/>
           <span className={styles["subnav-link"]}>{channelName}</span>
         </div>
       </nav>
@@ -105,26 +106,18 @@ export default function Subnav() {
         <Link className={styles["subnav-link"]} href="/">
           Holograma
         </Link>
-        <span className={styles["subnav-separator"]}>/</span>
-        {feedHref ? (
-          <Link className={styles["subnav-link"]} href={feedHref}>
-            Feed
-          </Link>
-        ) : (
-          <span className={styles["subnav-link-disabled"]}>Feed</span>
+        <span className={styles["subnav-separator"]} />
+        {feedHref && (
+          <>
+            <Link className={styles["subnav-link"]} href={feedHref}>
+              Feed
+            </Link>
+            <span className={styles["subnav-separator"]} />
+          </>
         )}
-        <span className={styles["subnav-separator"]}>/</span>
         <Link className={styles["subnav-link"]} href="/explore">
           Explore
         </Link>
-        <span className={styles["subnav-separator"]}>/</span>
-        {profileHref ? (
-          <Link className={styles["subnav-link"]} href={profileHref}>
-            Profile
-          </Link>
-        ) : (
-          <span className={styles["subnav-link-disabled"]}>Profile</span>
-        )}
       </div>
     </nav>
   );

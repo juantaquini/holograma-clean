@@ -81,10 +81,6 @@
   width: 100%;
 }
 
-
-
-
-
 .Auth-modal-forgot-link {
   font-size: 0.9em;
   color: var(--text-color-secondary);
@@ -93,13 +89,10 @@
   margin-top: 4px;
 }
 
-.Auth-modal-forgot-link:hover {
-  text-decoration: underline;
-}
 
 .Auth-modal-btn-primary {
   background-color: var(--button-color);
-  color: white;
+  color: var(--bg-color);
   border: none;
   border-radius: 25px;
   padding: 12px;
@@ -153,10 +146,6 @@
   color: var(--text-color-secondary);
   font-weight: 600;
   text-decoration: none;
-}
-
-.Auth-modal-link:hover {
-  text-decoration: underline;
 }
 
 @media (max-width: 600px) {

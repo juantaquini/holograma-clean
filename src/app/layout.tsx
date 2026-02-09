@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={plex.variable}>
+    <html lang="es" className={plex.variable} suppressHydrationWarning>
       <body>
         <Script
           id="theme-init"
@@ -78,9 +78,11 @@ export default function RootLayout({
           <AuthContextProvider>
             <ColorThemeProvider>
               <PopupProvider>
-                <Navbar />
-                <Subnav />
-                {children}
+                <div className="app-main">
+                  <Navbar />
+                  <Subnav />
+                  {children}
+                </div>
                 <Footer />
               </PopupProvider>
             </ColorThemeProvider>

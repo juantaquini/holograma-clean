@@ -81,7 +81,7 @@ const Login: React.FC<LoginProps> = ({
       await syncUserWithBackend(result.user);
 
       onClose?.();
-      router.push("/interactives");
+      router.push("/explore");
     } catch (err) {
       console.error(err);
       setError("Google sign-in failed.");
@@ -114,7 +114,7 @@ const Login: React.FC<LoginProps> = ({
 
       <div className={styles["Auth-modal-header"]}>
         <p className={styles["Auth-modal-logo"]}>HOLOGRAMA</p>
-        <h2 className={styles["Auth-modal-header-title"]}>Welcome back</h2>
+        <p className={styles["Auth-modal-header-title"]}>Hi, welcome back!</p>
       </div>
 
       {error && <div className={styles["Auth-modal-error"]}>{error}</div>}

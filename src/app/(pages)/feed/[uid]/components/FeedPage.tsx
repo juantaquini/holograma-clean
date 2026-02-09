@@ -6,6 +6,7 @@ import Image from "next/image";
 import styles from "./FeedPage.module.css";
 import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
 import { useAuth } from "@/app/(providers)/auth-provider";
+import LoadingSketch from "@/components/p5/loading/LoadingSketch";
 
 type Pad = {
   id: string;
@@ -126,9 +127,7 @@ const FeedPage = ({ uid }: { uid: string }) => {
 
   if (isLoading) {
     return (
-      <div className={styles["feed-container"]}>
-        <div className={styles["feed-loading"]}>Loading feed…</div>
-      </div>
+          <LoadingSketch/>
     );
   }
 
@@ -160,9 +159,6 @@ const FeedPage = ({ uid }: { uid: string }) => {
 
       {!!channels.length && (
         <section className={styles["feed-section"]}>
-          <div className={styles["feed-section-header"]}>
-            <h2>Channels</h2>
-          </div>
           <div className={styles["feed-grid"]}>
             {channels.map((channel) => (
               <Link
@@ -192,9 +188,6 @@ const FeedPage = ({ uid }: { uid: string }) => {
                     </div>
                   )}
                 </div>
-                <div className={styles["feed-card-body"]}>
-                  <div className={styles["feed-card-title"]}>{channel.title}</div>
-                </div>
               </Link>
             ))}
           </div>
@@ -205,17 +198,6 @@ const FeedPage = ({ uid }: { uid: string }) => {
         <div className={styles["feed-sections"]}>
           {groupedPads.map((section) => (
             <section key={section.title} className={styles["feed-section"]}>
-              <div className={styles["feed-section-header"]}>
-                <h2>Pads · {section.title}</h2>
-                {section.slug && section.ownerUid && (
-                  <Link
-                    href={`/channels/${section.ownerUid}/${section.slug}`}
-                    className={styles["feed-section-link"]}
-                  >
-                    Open channel
-                  </Link>
-                )}
-              </div>
               <div className={styles["feed-grid"]}>
                 {section.items.map((pad) => (
                   <Link
