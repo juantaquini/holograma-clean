@@ -12,7 +12,7 @@ import { useColorTheme } from "@/app/(providers)/color-theme-provider";
 import { colorPalettes, type ThemeName } from "@/lib/color-palettes";
 import Login from "@/components/auth/Login";
 import Signin from "@/components/auth/Signin";
-import { GiFallingStar } from "react-icons/gi";
+import { BsLayoutSidebarInsetReverse } from "react-icons/bs";
 
 const isMobile = () => window.innerWidth <= 1000;
 
@@ -99,7 +99,7 @@ export default function Navbar() {
               onClick={() => setMenuOpen((o) => !o)}
               aria-label="Open menu"
             >
-              <GiFallingStar size={20} />
+              <BsLayoutSidebarInsetReverse size={24} />
             </button>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function Navbar() {
                 onClick={() => setMenuOpen((o) => !o)}
                 aria-label="Open menu"
               >
-                <GiFallingStar size={20} />
+                <BsLayoutSidebarInsetReverse size={24} />
               </button>
             ) : (
               <div className={styles["navbar-auth-actions"]}>
@@ -160,6 +160,12 @@ export default function Navbar() {
             <div className={styles["navbar-sidebar-links"]}>
               <Link href="/explore" onClick={handleLinkClick}>
                 Explore
+              </Link>
+              <Link href="/articles" onClick={handleLinkClick}>
+                Articles
+              </Link>
+              <Link href="/interactives" onClick={handleLinkClick}>
+                interactives
               </Link>
               {user?.uid && (
                 <>

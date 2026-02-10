@@ -41,8 +41,7 @@ const SketchComponent: React.FC = () => {
     canvasElement.style.top = "0";
     canvasElement.style.left = "0";
     canvasElement.style.zIndex = "-2";
-    canvasElement.style.backgroundColor = "rgba(245, 245, 245, 0.1)";
-    
+
     p5.clear();
     p5.angleMode(p5.DEGREES);
     p5.rectMode(p5.CENTER);
@@ -94,7 +93,8 @@ const SketchComponent: React.FC = () => {
         left: 0,
         width: "100%",
         height: "100%",
-        backgroundColor: "rgba(245, 245, 245, 0.6)",
+        backgroundColor: "rgba(245, 245, 245, 0.2)", // más transparente
+        backdropFilter: "blur(6px)", // efecto vidrio
       }}
     >
       <Sketch

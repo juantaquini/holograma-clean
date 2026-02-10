@@ -1,0 +1,83 @@
+.card {
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.2s ease;
+}
+
+.card:hover {
+  opacity: 0.85;
+}
+
+.cardImage {
+  position: relative;
+  width: 100%;
+  
+}
+
+.cardImage img {
+  object-fit: contain;
+  object-position: left top;
+}
+
+.cardPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-color-secondary);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.cardBody {
+  padding: 10px 0 0;
+  text-align: left;
+}
+
+.cardTitle {
+  font-size: 14px;
+  letter-spacing: 0.4px;
+  color: var(--text-color-secondary);
+}
+
+.channelPlaceholder {
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed var(--text-color);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 12px;
+}
+
+.channelTitle {
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  color: var(--text-color);
+}
+
+.channelBy {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-color-secondary);
+}
+
+.channelUser {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: var(--text-color-secondary);
+}
+
+@media (max-width: 720px) {
+  .cardImage {
+    height: 170px;
+  }
+}

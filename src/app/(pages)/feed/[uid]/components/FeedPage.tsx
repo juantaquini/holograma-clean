@@ -2,43 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import styles from "./FeedPage.module.css";
 import { fetchGraphQL } from "@/lib/graphql/fetchGraphQL";
 import { useAuth } from "@/app/(providers)/auth-provider";
 import LoadingSketch from "@/components/p5/loading/LoadingSketch";
+import {
+  ContentFeedWithLines,
+  type Channel,
+  type Pad,
+  type Article,
+  type ContentSection,
+} from "@/components/content-feed";
 
-type Pad = {
-  id: string;
-  title: string;
-  images: string[];
-  channel?: {
-    id: string;
-    title: string;
-    slug: string;
-    ownerUid: string;
-  } | null;
-};
-
-type Channel = {
-  id: string;
-  title: string;
-  slug: string;
-  coverUrl?: string | null;
-  ownerUid: string;
-  owner?: {
-    uid: string;
-    displayName?: string | null;
-  } | null;
-};
-
-type PadData = {
-  pads: Pad[];
-};
-
-type ChannelData = {
-  channelsByOwner: Channel[];
-};
+type PadData = { pads: Pad[] };
+type ArticleData = { articles: Article[] };
+type ChannelData = { channelsByOwner: Channel[] };
 
 const PADS_QUERY = `
   query FeedPads($uid: String!, $limit: Int!) {
@@ -46,12 +24,18 @@ const PADS_QUERY = `
       id
       title
       images
-      channel {
-        id
-        title
-        slug
-        ownerUid
-      }
+      channel { id title slug ownerUid }
+    }
+  }
+`;
+
+const ARTICLES_QUERY = `
+  query FeedArticles($authorUid: String!, $limit: Int!) {
+    articles(authorUid: $authorUid, limit: $limit) {
+      id
+      title
+      images
+      channel { id title slug ownerUid }
     }
   }
 `;
@@ -64,10 +48,7 @@ const CHANNELS_QUERY = `
       slug
       coverUrl
       ownerUid
-      owner {
-        uid
-        displayName
-      }
+      owner { uid displayName }
     }
   }
 `;
@@ -75,6 +56,7 @@ const CHANNELS_QUERY = `
 const FeedPage = ({ uid }: { uid: string }) => {
   const { user } = useAuth();
   const [pads, setPads] = useState<Pad[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,16 +65,13 @@ const FeedPage = ({ uid }: { uid: string }) => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [padsData, channelsData] = await Promise.all([
-          fetchGraphQL<PadData>(PADS_QUERY, {
-            uid,
-            limit: 96,
-          }),
-          fetchGraphQL<ChannelData>(CHANNELS_QUERY, {
-            uid,
-          }),
+        const [padsData, articlesData, channelsData] = await Promise.all([
+          fetchGraphQL<PadData>(PADS_QUERY, { uid, limit: 96 }),
+          fetchGraphQL<ArticleData>(ARTICLES_QUERY, { authorUid: uid, limit: 96 }),
+          fetchGraphQL<ChannelData>(CHANNELS_QUERY, { uid }),
         ]);
         setPads(padsData.pads ?? []);
+        setArticles(articlesData.articles ?? []);
         setChannels(channelsData.channelsByOwner ?? []);
       } catch (err: any) {
         console.error(err);
@@ -101,34 +80,44 @@ const FeedPage = ({ uid }: { uid: string }) => {
         setIsLoading(false);
       }
     };
-
     load();
   }, [uid]);
 
-  const groupedPads = useMemo(() => {
-    const map = new Map<
-      string,
-      { title: string; slug?: string | null; ownerUid?: string | null; items: Pad[] }
-    >();
+  const sections = useMemo((): ContentSection[] => {
+    const map = new Map<string, ContentSection>();
     pads.forEach((pad) => {
       const key = pad.channel?.id ?? "uncategorized";
       if (!map.has(key)) {
         map.set(key, {
+          channelId: key,
           title: pad.channel?.title ?? "Uncategorized",
           slug: pad.channel?.slug ?? null,
           ownerUid: pad.channel?.ownerUid ?? null,
-          items: [],
+          pads: [],
+          articles: [],
         });
       }
-      map.get(key)!.items.push(pad);
+      map.get(key)!.pads.push(pad);
+    });
+    articles.forEach((article) => {
+      const key = article.channel?.id ?? "uncategorized";
+      if (!map.has(key)) {
+        map.set(key, {
+          channelId: key,
+          title: article.channel?.title ?? "Uncategorized",
+          slug: article.channel?.slug ?? null,
+          ownerUid: article.channel?.ownerUid ?? null,
+          pads: [],
+          articles: [],
+        });
+      }
+      map.get(key)!.articles.push(article);
     });
     return Array.from(map.values());
-  }, [pads]);
+  }, [pads, articles]);
 
   if (isLoading) {
-    return (
-          <LoadingSketch/>
-    );
+    return <LoadingSketch />;
   }
 
   if (error) {
@@ -139,94 +128,33 @@ const FeedPage = ({ uid }: { uid: string }) => {
     );
   }
 
+  const emptyMessage = (
+    <div className={styles["feed-empty"]}>
+      <p className={styles["feed-empty-text"]}>No content yet.</p>
+      {isOwnFeed && (
+        <div className={styles["feed-empty-actions"]}>
+          <Link className={styles["feed-empty-button"]} href="/pads/create">
+            Create pad
+          </Link>
+          <Link className={styles["feed-empty-button"]} href="/articles/create">
+            Create article
+          </Link>
+          <Link className={styles["feed-empty-button-secondary"]} href="/channels/create">
+            Create channel
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className={styles["feed-container"]}>
-      {channels.length === 0 && pads.length === 0 && (
-        <div className={styles["feed-empty"]}>
-          <p className={styles["feed-empty-text"]}>No content yet.</p>
-          {isOwnFeed && (
-            <div className={styles["feed-empty-actions"]}>
-              <Link className={styles["feed-empty-button"]} href="/pads/create">
-                Create pad
-              </Link>
-              <Link className={styles["feed-empty-button-secondary"]} href="/channels/create">
-                Create channel
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
-
-      {!!channels.length && (
-        <section className={styles["feed-section"]}>
-          <div className={styles["feed-grid"]}>
-            {channels.map((channel) => (
-              <Link
-                key={channel.id}
-                href={`/channels/${channel.ownerUid}/${channel.slug}`}
-                className={styles["feed-card"]}
-              >
-                <div className={styles["feed-card-image"]}>
-                  {channel.coverUrl ? (
-                    <Image
-                      src={channel.coverUrl}
-                      alt={channel.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                    />
-                  ) : (
-                    <div className={styles["feed-channel-placeholder"]}>
-                      <div className={styles["feed-channel-title"]}>
-                        {channel.title}
-                      </div>
-                      <div className={styles["feed-channel-by"]}>by</div>
-                      <div className={styles["feed-channel-user"]}>
-                        {channel.owner?.displayName ||
-                          channel.owner?.uid ||
-                          channel.ownerUid}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {!!groupedPads.length && (
-        <div className={styles["feed-sections"]}>
-          {groupedPads.map((section) => (
-            <section key={section.title} className={styles["feed-section"]}>
-              <div className={styles["feed-grid"]}>
-                {section.items.map((pad) => (
-                  <Link
-                    key={pad.id}
-                    href={`/pads/${pad.id}`}
-                    className={styles["feed-card"]}
-                  >
-                    <div className={styles["feed-card-image"]}>
-                      {pad.images?.[0] ? (
-                        <Image
-                          src={pad.images[0]}
-                          alt={pad.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                        />
-                      ) : (
-                        <div className={styles["feed-card-placeholder"]}>No image</div>
-                      )}
-                    </div>
-                    <div className={styles["feed-card-body"]}>
-                      <div className={styles["feed-card-title"]}>{pad.title}</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
+      <ContentFeedWithLines
+        channels={channels}
+        sections={sections}
+        emptyMessage={emptyMessage}
+        persistChannelKey={`feed-${uid}`}
+      />
     </div>
   );
 };

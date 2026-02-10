@@ -41,6 +41,30 @@ type SketchRow = {
   users?: UserRow | UserRow[] | null;
 };
 
+type ArticleMediaRow = {
+  id: string;
+  url: string;
+  kind: "image" | "video" | "audio";
+  width?: number | null;
+  height?: number | null;
+  duration?: number | null;
+};
+
+type ArticleRow = {
+  id: number;
+  title: string;
+  artist?: string | null;
+  content?: string | null;
+  author_uid: string;
+  channel_id?: string | null;
+  created_at: string;
+  article_media?: Array<{
+    position: number;
+    media: ArticleMediaRow | ArticleMediaRow[] | null;
+  }>;
+  channels?: ChannelRow | ChannelRow[] | null;
+};
+
 const schema = buildSchema(`
   type Media {
     id: ID!
@@ -79,12 +103,37 @@ const schema = buildSchema(`
     author: Author
   }
 
+  type ArticleMedia {
+    id: ID!
+    url: String!
+    kind: String!
+    width: Float
+    height: Float
+    duration: Float
+  }
+
+  type Article {
+    id: ID!
+    title: String!
+    artist: String
+    content: String
+    images: [String!]!
+    videos: [String!]!
+    audios: [String!]!
+    media: [ArticleMedia!]!
+    authorUid: String!
+    createdAt: String!
+    channel: Channel
+  }
+
   type Query {
     pads(ownerUid: String, channelId: ID, limit: Int, offset: Int): [Pad!]!
     pad(id: ID!): Pad
     channels(limit: Int, offset: Int): [Channel!]!
     channelsByOwner(ownerUid: String!): [Channel!]!
     channelBySlug(ownerUid: String!, slug: String!): Channel
+    articles(authorUid: String, limit: Int): [Article!]!
+    article(id: ID!): Article
   }
 
   type Mutation {
@@ -167,6 +216,30 @@ const mapPad = (sketch: SketchRow) => {
     media: sorted,
     channel,
     author,
+  };
+};
+
+const mapArticle = (row: ArticleRow) => {
+  const sorted = (row.article_media || [])
+    .sort((a, b) => a.position - b.position)
+    .map((am) => (Array.isArray(am.media) ? am.media[0] : am.media))
+    .filter(Boolean) as ArticleMediaRow[];
+
+  const rawChannel = Array.isArray(row.channels) ? row.channels[0] : row.channels;
+  const channel = rawChannel ? mapChannel(rawChannel) : null;
+
+  return {
+    id: String(row.id),
+    title: row.title,
+    artist: row.artist ?? null,
+    content: row.content ?? null,
+    images: sorted.filter((m) => m.kind === "image").map((m) => m.url),
+    videos: sorted.filter((m) => m.kind === "video").map((m) => m.url),
+    audios: sorted.filter((m) => m.kind === "audio").map((m) => m.url),
+    media: sorted,
+    authorUid: row.author_uid,
+    createdAt: row.created_at,
+    channel,
   };
 };
 
@@ -371,6 +444,102 @@ const fetchChannels = async ({
   );
 };
 
+const fetchArticles = async ({
+  authorUid,
+  limit,
+}: {
+  authorUid?: string | null;
+  limit?: number | null;
+}) => {
+  const safeLimit = clampLimit(limit);
+
+  let query = supabase
+    .from("article")
+    .select(
+      `
+      id,
+      title,
+      artist,
+      content,
+      author_uid,
+      created_at,
+      article_media (
+        position,
+        media (
+          id,
+          url,
+          kind,
+          width,
+          height,
+          duration
+        )
+      ),
+      channels (
+        id,
+        owner_uid,
+        title,
+        slug,
+        description,
+        cover_media:media (url)
+      )
+    `
+    )
+    .order("created_at", { ascending: false })
+    .range(0, safeLimit - 1);
+
+  if (authorUid) {
+    query = query.eq("author_uid", authorUid);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  return (data || []).map((row) => mapArticle(row as ArticleRow));
+};
+
+const fetchArticleById = async (id: string) => {
+  const idNum = Number(id);
+  if (!Number.isFinite(idNum)) return null;
+
+  const { data, error } = await supabase
+    .from("article")
+    .select(
+      `
+      id,
+      title,
+      artist,
+      content,
+      author_uid,
+      created_at,
+      article_media (
+        position,
+        media (
+          id,
+          url,
+          kind,
+          width,
+          height,
+          duration
+        )
+      ),
+      channels (
+        id,
+        owner_uid,
+        title,
+        slug,
+        description,
+        cover_media:media (url)
+      )
+    `
+    )
+    .eq("id", idNum)
+    .single();
+
+  if (error) throw error;
+  if (!data) return null;
+  return mapArticle(data as ArticleRow);
+};
+
 const createChannel = async ({
   ownerUid,
   title,
@@ -433,6 +602,9 @@ const root = {
   channelsByOwner: ({ ownerUid }: { ownerUid: string }) => fetchChannelsByOwner(ownerUid),
   channelBySlug: ({ ownerUid, slug }: { ownerUid: string; slug: string }) =>
     fetchChannelBySlug(ownerUid, slug),
+  articles: ({ authorUid, limit }: { authorUid?: string | null; limit?: number | null }) =>
+    fetchArticles({ authorUid, limit }),
+  article: ({ id }: { id: string }) => fetchArticleById(id),
   createChannel: ({
     ownerUid,
     title,

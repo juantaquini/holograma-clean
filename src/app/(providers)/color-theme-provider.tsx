@@ -18,6 +18,7 @@ type ColorThemeContextValue = {
 const ColorThemeContext = createContext<ColorThemeContextValue | undefined>(undefined);
 
 const DEFAULT_THEME: ThemeName = "light";
+const THEME_STORAGE_KEY = "holograma-theme";
 
 function applyPaletteToRoot(colors: (typeof colorPalettes)[ThemeName]) {
   if (typeof document === "undefined" || !colors) return;
@@ -38,29 +39,33 @@ function applyPaletteToRoot(colors: (typeof colorPalettes)[ThemeName]) {
   if (colors.opacity_neutral) root.style.setProperty("--opacity-neutral-color", colors.opacity_neutral);
 }
 
-export default function ColorThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<ThemeName>(DEFAULT_THEME);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const applyTheme = () => setTheme(media.matches ? "dark" : "light");
-    if (media.addEventListener) {
-      media.addEventListener("change", applyTheme);
-    } else {
-      media.addListener(applyTheme);
+function getStoredTheme(): ThemeName | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored && Object.prototype.hasOwnProperty.call(colorPalettes, stored)) {
+      return stored as ThemeName;
     }
-    return () => {
-      if (media.removeEventListener) {
-        media.removeEventListener("change", applyTheme);
-      } else {
-        media.removeListener(applyTheme);
-      }
-    };
-  }, []);
+  } catch {}
+  return null;
+}
+
+export default function ColorThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<ThemeName>(() => {
+    const stored = getStoredTheme();
+    if (stored) return stored;
+    if (typeof window !== "undefined") {
+      const media = window.matchMedia("(prefers-color-scheme: dark)");
+      return media.matches ? "dark" : "light";
+    }
+    return DEFAULT_THEME;
+  });
 
   const changeTheme = (newTheme: ThemeName) => {
     setTheme(newTheme);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+    } catch {}
   };
 
   const colors = colorPalettes[theme] ?? colorPalettes[DEFAULT_THEME];

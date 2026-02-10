@@ -1,0 +1,117 @@
+.container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-height: 50vh;
+  padding: 18px;
+}
+
+.channelsSection {
+  padding: 12px 0;
+  width: 100%;
+}
+
+.channelsRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  z-index: 2;
+}
+
+.channelCardWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.channelCardWrapper > a {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.itemsContainer {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 280px;
+  margin-top: 0;
+}
+
+.smallCard {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: auto;
+  border: 2px dashed var(--text-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s ease;
+  width: 90px;
+  height: 90px;
+}
+
+.smallCard:hover {
+  opacity: 0.9;
+}
+
+.smallCardImage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.smallCardImage img {
+  object-fit: cover;
+}
+
+.smallCardPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 10px;
+  color: var(--text-color-secondary);
+  letter-spacing: 0.3px;
+}
+
+.dottedLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (max-width: 720px) {
+  .container {
+    padding: 12px 14px 60px;
+  }
+
+  .smallCard {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .channelsRow {
+    gap: 1rem;
+  }
+
+  .smallCard {
+    width: 60px;
+    height: 60px;
+  }
+}
